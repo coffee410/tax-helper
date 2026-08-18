@@ -345,13 +345,13 @@
       <table id="ledgerTable">
         <thead><tr>
           <th data-sort="type" data-label="구분">구분</th>
-          <th data-sort="sellDate" data-label="판매일">판매일</th>
-          <th data-sort="platform" data-label="플랫폼">플랫폼</th>
           <th data-sort="item" data-label="품목">품목</th>
-          <th data-sort="sellPrice" data-label="판매가">판매가</th>
           <th>구입처</th>
           <th data-sort="buyDate" data-label="구매일">구매일</th>
           <th data-sort="buyPrice" data-label="구매가">구매가</th>
+          <th data-sort="sellDate" data-label="판매일">판매일</th>
+          <th data-sort="platform" data-label="판매처">판매처</th>
+          <th data-sort="sellPrice" data-label="판매가">판매가</th>
           <th data-sort="profit" data-label="손익">손익</th>
           <th data-sort="hold" data-label="보유기간">보유기간</th>
           <th data-sort="reason" data-label="판매 사유">판매 사유</th><th>증빙</th><th></th>
@@ -1079,13 +1079,13 @@ function render() {
       : '<span class="tag used">중고</span>';
     tr.innerHTML =
       '<td>' + tag + '</td>' +
-      '<td>' + escHtml(r.sellDate) + '</td>' +
-      '<td>' + escHtml(r.platform) + '</td>' +
       '<td class="wrap">' + escHtml(r.item) + '</td>' +
-      '<td class="num">' + fmt(r.sellPrice) + '</td>' +
       '<td>' + escHtml(buySrc(r)) + '</td>' +
       '<td>' + escHtml(r.buyDate || '-') + '</td>' +
       '<td class="num">' + fmt(r.buyPrice) + '</td>' +
+      '<td>' + escHtml(r.sellDate) + '</td>' +
+      '<td>' + escHtml(r.platform) + '</td>' +
+      '<td class="num">' + fmt(r.sellPrice) + '</td>' +
       '<td class="num">' + (profit === null ? '-' : fmt(profit)) + '</td>' +
       '<td>' + holdLabel(days) + '</td>' +
       '<td class="wrap-wide">' + reasonHtml(r.reason) + '</td>' +
