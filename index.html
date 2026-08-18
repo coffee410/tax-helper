@@ -157,6 +157,9 @@
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; }
   }
+  /* 대장 표: 품목·판매사유는 줄바꿈 허용 — 아니면 표가 옆으로 끝없이 길어져 금액 칸이 화면 밖으로 밀림 */
+  #ledgerTable td.wrap { white-space: normal; word-break: keep-all; overflow-wrap: anywhere; min-width: 180px; max-width: 300px; }
+  #ledgerTable td.wrap-wide { white-space: normal; word-break: keep-all; overflow-wrap: anywhere; min-width: 220px; max-width: 360px; }
   /* 판매 사유 — 본문 + 작은 회색 번호줄로 나눠 표시 */
   .reason-main { display: block; }
   .reason-sub { display: block; font-size: .72rem; color: var(--muted); letter-spacing: .01em; margin-top: 2px; }
@@ -346,6 +349,7 @@
           <th data-sort="platform" data-label="플랫폼">플랫폼</th>
           <th data-sort="item" data-label="품목">품목</th>
           <th data-sort="sellPrice" data-label="판매가">판매가</th>
+          <th>구입처</th>
           <th data-sort="buyDate" data-label="구매일">구매일</th>
           <th data-sort="buyPrice" data-label="구매가">구매가</th>
           <th data-sort="profit" data-label="손익">손익</th>
@@ -760,6 +764,15 @@ function reasonHtml(rsn) {
   if (subs.length) html += '<span class="reason-sub">' + escHtml(subs.join(' · ')) + '</span>';
   return '<span title="' + escHtml(s) + '">' + html + '</span>';
 }
+// 구입처 — 판매사유 속 매입처 문구에서 유추해 별도 칸으로 표시
+function buySrc(r) {
+  const s = r.reason || '';
+  if (s.includes('크림 구매')) return '크림';
+  if (s.includes('무신사 오프라인')) return '무신사 매장';
+  if (s.includes('무신사')) return '무신사';
+  if (s.includes('웍스아웃')) return '웍스아웃';
+  return r.buyDate ? '기타' : '-';
+}
 function evBtnHtml(r, i) {
   const n = evIdsFor(r).length;
   return '<button class="ev-btn' + (n ? ' has' : '') + '" data-i="' + i + '" title="증빙 사진">' +
@@ -1068,13 +1081,14 @@ function render() {
       '<td>' + tag + '</td>' +
       '<td>' + escHtml(r.sellDate) + '</td>' +
       '<td>' + escHtml(r.platform) + '</td>' +
-      '<td>' + escHtml(r.item) + '</td>' +
+      '<td class="wrap">' + escHtml(r.item) + '</td>' +
       '<td class="num">' + fmt(r.sellPrice) + '</td>' +
+      '<td>' + escHtml(buySrc(r)) + '</td>' +
       '<td>' + escHtml(r.buyDate || '-') + '</td>' +
       '<td class="num">' + fmt(r.buyPrice) + '</td>' +
       '<td class="num">' + (profit === null ? '-' : fmt(profit)) + '</td>' +
       '<td>' + holdLabel(days) + '</td>' +
-      '<td>' + reasonHtml(r.reason) + '</td>' +
+      '<td class="wrap-wide">' + reasonHtml(r.reason) + '</td>' +
       '<td style="text-align:center;">' + evBtnHtml(r, i) + '</td>' +
       '<td><button class="edit" data-i="' + i + '">수정</button><button class="del" data-i="' + i + '">삭제</button></td>';
     tbody.appendChild(tr);
