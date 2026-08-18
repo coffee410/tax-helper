@@ -1,0 +1,1745 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>중고거래 세금 도우미 — 자가진단·소명자료·신고 안내</title>
+<style>
+  :root {
+    --accent: #2563eb;
+    --accent-light: #eff6ff;
+    --green: #16a34a;
+    --amber: #d97706;
+    --red: #dc2626;
+    --ink: #1f2937;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --bg: #f9fafb;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+    color: var(--ink); background: var(--bg); line-height: 1.65;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 16px 60px; }
+  header { background: #fff; border-bottom: 1px solid var(--line); padding: 28px 16px 0; }
+  header .wrap { padding-bottom: 0; }
+  h1 { font-size: 1.5rem; margin-bottom: 4px; }
+  .subtitle { color: var(--muted); font-size: .95rem; margin-bottom: 18px; }
+  nav { display: flex; gap: 4px; flex-wrap: wrap; }
+  nav button {
+    border: none; background: none; padding: 10px 16px; font-size: 1rem; cursor: pointer;
+    border-bottom: 3px solid transparent; color: var(--muted); font-family: inherit;
+  }
+  nav button.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 700; }
+  section.tab { display: none; padding-top: 24px; }
+  section.tab.active { display: block; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 20px; margin-bottom: 16px; }
+  .card h2 { font-size: 1.15rem; margin-bottom: 10px; }
+  .card h3 { font-size: 1rem; margin: 14px 0 6px; }
+  .note { background: var(--accent-light); border-left: 4px solid var(--accent); padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: .92rem; margin: 10px 0; }
+  .warn { background: #fef2f2; border-left: 4px solid var(--red); padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: .92rem; margin: 10px 0; }
+  ul, ol { padding-left: 22px; margin: 6px 0; }
+  li { margin: 3px 0; }
+  .q { margin-bottom: 18px; }
+  .q p.qt { font-weight: 700; margin-bottom: 8px; }
+  .q label { display: block; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 6px; cursor: pointer; font-size: .95rem; background: #fff; }
+  .q label:hover { border-color: var(--accent); }
+  .q input { margin-right: 8px; }
+  button.primary {
+    background: var(--accent); color: #fff; border: none; padding: 11px 22px;
+    border-radius: 8px; font-size: 1rem; cursor: pointer; font-family: inherit; font-weight: 700;
+  }
+  button.primary:hover { opacity: .9; }
+  button.ghost {
+    background: #fff; color: var(--ink); border: 1px solid var(--line); padding: 9px 16px;
+    border-radius: 8px; font-size: .92rem; cursor: pointer; font-family: inherit;
+  }
+  .result { display: none; margin-top: 18px; }
+  .badge { display: inline-block; padding: 4px 12px; border-radius: 999px; font-weight: 700; font-size: .92rem; margin-bottom: 8px; }
+  .badge.g { background: #dcfce7; color: var(--green); }
+  .badge.a { background: #fef3c7; color: var(--amber); }
+  .badge.r { background: #fee2e2; color: var(--red); }
+  /* 판매대장 */
+  form.ledger { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  form.ledger .field { display: flex; flex-direction: column; min-width: 0; }
+  form.ledger label { font-size: .82rem; color: var(--muted); margin-bottom: 3px; }
+  form.ledger input, form.ledger select {
+    padding: 8px; border: 1px solid var(--line); border-radius: 6px; font-size: .92rem; font-family: inherit;
+    width: 100%; min-width: 0; box-sizing: border-box;
+  }
+  form.ledger .full { grid-column: 1 / -1; }
+  @media (max-width: 640px) { form.ledger { grid-template-columns: repeat(2, 1fr); } }
+  .table-scroll { overflow-x: auto; margin-top: 14px; }
+  table { border-collapse: collapse; width: 100%; font-size: .88rem; background: #fff; }
+  th, td { border: 1px solid var(--line); padding: 7px 9px; text-align: left; white-space: nowrap; }
+  th { background: var(--bg); font-size: .84rem; }
+  td.num { text-align: right; }
+  tr.flag td { background: #fff7ed; }
+  .stats { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+  .stat { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 16px; min-width: 130px; }
+  .stat .v { font-size: 1.15rem; font-weight: 700; }
+  .stat .k { font-size: .8rem; color: var(--muted); }
+  .toolbar { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  footer { border-top: 1px solid var(--line); background: #fff; padding: 20px 16px; font-size: .84rem; color: var(--muted); }
+  details { margin: 8px 0; }
+  summary { cursor: pointer; font-weight: 700; }
+  .del { color: var(--red); cursor: pointer; border: none; background: none; font-size: .9rem; }
+  .edit { color: var(--accent); cursor: pointer; border: none; background: none; font-size: .9rem; }
+  .ocr-box { border: 1px dashed var(--accent); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; background: var(--accent-light); }
+  .deadline-bar { background: #1e3a8a; color: #fff; font-size: .85rem; padding: 7px 16px; text-align: center; }
+  .deadline-bar b { color: #fbbf24; }
+  .wizard-btns { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 14px; }
+  .wizard-btns button {
+    flex: 1 1 180px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff;
+    cursor: pointer; font-family: inherit; font-size: .92rem; text-align: left;
+  }
+  .wizard-btns button.on { border-color: var(--accent); background: var(--accent-light); font-weight: 700; }
+  .wizard-panel { display: none; }
+  .wizard-panel.on { display: block; }
+  .law { font-size: .78rem; color: var(--muted); }
+  textarea.letter { width: 100%; min-height: 320px; font-family: inherit; font-size: .88rem; padding: 12px; border: 1px solid var(--line); border-radius: 8px; line-height: 1.6; }
+  .tag { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: .78rem; font-weight: 700; }
+  .tag.used { background: #dcfce7; color: var(--green); }
+  .tag.resell { background: #fee2e2; color: var(--red); }
+  .sync { display: none; font-size: .85rem; padding: 8px 12px; border-radius: 8px; margin-bottom: 12px; background: var(--accent-light); color: var(--accent); }
+  .sync.ok { background: #dcfce7; color: var(--green); }
+  .sync.err { background: #fee2e2; color: var(--red); }
+  .sync-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
+  .sync-in { padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; font-size: .92rem; font-family: inherit; min-width: 200px; }
+  .sync-code { font-family: Consolas, monospace; font-size: 1.05rem; font-weight: 700; letter-spacing: 1px; background: var(--bg); border: 1px dashed var(--accent); border-radius: 8px; padding: 12px 14px; margin: 8px 0; word-break: break-all; }
+  .sync-note { font-size: .85rem; color: var(--muted); margin: 6px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>중고거래 세금 도우미</h1>
+    <p class="subtitle">중고거래·리셀 플랫폼 이용자를 위한 자가진단, 소명자료 준비, 세금 신고 안내</p>
+    <nav>
+      <button class="active" data-tab="diag">① 자가진단</button>
+      <button data-tab="ledger">② 판매 대장</button>
+      <button data-tab="guide">③ 신고 안내</button>
+      <button data-tab="caught">④ 걸렸을 때</button>
+    </nav>
+  </div>
+</header>
+<div class="deadline-bar" id="deadlineBar"></div>
+
+<div class="wrap">
+
+<!-- ============ ① 자가진단 ============ -->
+<section class="tab active" id="tab-diag">
+  <div class="card">
+    <h2>나는 세금 신고 대상일까? 자가진단</h2>
+    <p style="font-size:.94rem; color:var(--muted); margin-bottom:14px;">
+      쓰던 물건을 파는 일상적 중고거래는 과세 대상이 아닙니다. 다만 <b>영리 목적으로 계속적·반복적으로 판매</b>한 경우
+      사업자등록 여부와 관계없이 사업소득으로 판단될 수 있습니다. 아래 질문에 답하면 어느 쪽에 가까운지 가늠할 수 있습니다.
+    </p>
+
+    <div class="q" data-name="q1">
+      <p class="qt">1. 주로 어떤 물건을 판매했나요?</p>
+      <label><input type="radio" name="q1" value="0">내가 쓰던 물건·소장품 (사용감 있는 상태)</label>
+      <label><input type="radio" name="q1" value="1">안 쓰게 된 새 상품 (선물 중복, 사이즈 미스 등)</label>
+      <label><input type="radio" name="q1" value="3">되팔 목적으로 구입한 물건 (한정판 응모·발매 구매 등)</label>
+    </div>
+
+    <div class="q" data-name="q2">
+      <p class="qt">2. 산 가격보다 비싸게 판 경우가 있나요?</p>
+      <label><input type="radio" name="q2" value="0">없다 — 대부분 산 값보다 싸게 팔았다</label>
+      <label><input type="radio" name="q2" value="1">한두 번 있다</label>
+      <label><input type="radio" name="q2" value="3">자주 있다 — 시세차익이 목적이었다</label>
+    </div>
+
+    <div class="q" data-name="q3">
+      <p class="qt">3. 같은 품목을 여러 개 판매한 적이 있나요? (예: 같은 신발 여러 켤레)</p>
+      <label><input type="radio" name="q3" value="0">없다</label>
+      <label><input type="radio" name="q3" value="2">있다</label>
+    </div>
+
+    <div class="q" data-name="q4">
+      <p class="qt">4. 판매 물품 중 미개봉 새 상품의 비중은?</p>
+      <label><input type="radio" name="q4" value="0">거의 없음</label>
+      <label><input type="radio" name="q4" value="1">일부</label>
+      <label><input type="radio" name="q4" value="3">대부분</label>
+    </div>
+
+    <div class="q" data-name="q5">
+      <p class="qt">5. 구매 후 얼마 만에 되팔았나요?</p>
+      <label><input type="radio" name="q5" value="0">대체로 오래 사용한 뒤 처분</label>
+      <label><input type="radio" name="q5" value="1">경우에 따라 다양</label>
+      <label><input type="radio" name="q5" value="2">며칠~몇 주 안에 되판 경우가 많다</label>
+    </div>
+
+    <div class="q" data-name="q6">
+      <p class="qt">6. 연간 판매 규모는? (모든 플랫폼 합산)</p>
+      <label><input type="radio" name="q6" value="0">몇 건, 소액</label>
+      <label><input type="radio" name="q6" value="1">수십 건 또는 수백만 원대</label>
+      <label><input type="radio" name="q6" value="2">50건 이상 또는 4,000만 원 이상</label>
+    </div>
+
+    <button class="primary" id="diagBtn">결과 보기</button>
+
+    <div class="result card" id="diagResult" style="border-width:2px;"></div>
+  </div>
+
+  <div class="card" id="checklist">
+    <h2>소명자료 준비 체크리스트</h2>
+    <p style="font-size:.9rem;color:var(--muted);">국세청 안내문을 받았을 때 "개인 물품 처분"임을 소명하기 위한 자료입니다. 미리 준비해두면 좋습니다.</p>
+    <h3>1) 취득 근거 (가장 중요)</h3>
+    <ul>
+      <li>온라인 구매: 쇼핑몰·플랫폼 주문내역 캡처 (주문일·상품명·결제금액 표시)</li>
+      <li>오프라인 구매: 카드 결제내역 (카드사 앱에서 과거 승인내역 조회 가능)</li>
+      <li>선물·상속 물품: 취득 경위 메모</li>
+    </ul>
+    <h3>2) 판매 내역 대장</h3>
+    <ul>
+      <li>판매일·플랫폼·품목·판매가·구매일·구매가·판매 사유를 표로 정리 → <b>② 판매 대장</b> 탭에서 작성하세요</li>
+      <li>"구매가 &gt; 판매가"가 대부분이고 보유기간이 길면, 표 자체가 사업성이 없다는 증거가 됩니다</li>
+    </ul>
+    <h3>3) 사용 사실 증빙</h3>
+    <ul>
+      <li>실제 사용 중 찍힌 사진 (사진첩·SNS에 자연스럽게 남은 것)</li>
+      <li>"사용감 있음" 등 문구가 포함된 판매글 캡처</li>
+    </ul>
+    <h3>4) 돈 흐름 자료</h3>
+    <ul>
+      <li>거래대금 입금 계좌·페이 내역 (판매 대장 금액과 대조)</li>
+      <li>플랫폼 정산내역 캡처 (탈퇴 전 반드시 백업)</li>
+    </ul>
+    <div class="note">자료는 <b>5년간 보관</b>하세요. 세금을 부과할 수 있는 기간(부과제척기간)이 원칙적으로 5년이라, 그 기간 안에는 소명 요구가 올 수 있습니다.</div>
+    <div class="warn">국세청 사칭 피싱 주의 — 문자 속 링크를 누르지 말고, 홈택스(hometax.go.kr) 로그인 후 안내문을 직접 조회하거나 국세상담센터 <b>126</b>으로 확인하세요.</div>
+  </div>
+</section>
+
+<!-- ============ ② 판매 대장 ============ -->
+<section class="tab" id="tab-ledger">
+  <div class="card">
+    <h2>판매 내역 대장 작성</h2>
+    <p style="font-size:.9rem;color:var(--muted);margin-bottom:12px;">
+      입력한 내용은 기본적으로 <b>이 브라우저에만 저장</b>됩니다. 구글 시트 연동 버전(웹앱)에서는 본인 구글 계정의 시트에 저장되어
+      PC·폰 어디서나 같은 데이터를 봅니다. 작성 후 CSV(엑셀) 파일로 내려받아 보관하세요.
+    </p>
+    <div class="sync" id="syncBar"></div>
+    <div class="ocr-box" id="ocrBox">
+      <label for="f-receipt" style="font-weight:700;">영수증 사진으로 자동 입력</label>
+      <p style="font-size:.85rem;color:var(--muted);margin:2px 0 8px;">
+        구매 영수증(카드전표·현금영수증·주문내역 캡처) 사진을 올리면 <b>구매일·구매가</b>를 자동으로 채웁니다.
+        사진은 브라우저 안에서만 처리되며 어디에도 전송되지 않습니다. (최초 사용 시 인식 엔진 내려받기로 인터넷 연결 필요)
+      </p>
+      <input type="file" id="f-receipt" accept="image/*">
+      <span id="ocrStatus" style="font-size:.85rem;color:var(--accent);margin-left:8px;"></span>
+      <details id="ocrDetails" style="display:none;"><summary style="font-size:.85rem;">인식된 원문 보기 (자동 입력값이 맞는지 꼭 확인하세요)</summary>
+        <pre id="ocrText" style="font-size:.8rem;white-space:pre-wrap;background:var(--bg);padding:8px;border-radius:6px;margin-top:6px;"></pre>
+      </details>
+    </div>
+    <form class="ledger" id="ledgerForm">
+      <div class="field"><label>구분</label>
+        <select id="f-type">
+          <option>중고거래</option><option>리셀</option>
+        </select>
+      </div>
+      <div class="field"><label>판매일</label><input type="date" id="f-sellDate" required></div>
+      <div class="field"><label>플랫폼</label>
+        <select id="f-platform">
+          <option>당근마켓</option><option>번개장터</option><option>중고나라</option>
+          <option>크림(KREAM)</option><option>기타</option>
+        </select>
+      </div>
+      <div class="field"><label>품목</label><input type="text" id="f-item" placeholder="예: 아이패드 9세대" required></div>
+      <div class="field"><label>판매가 (원)</label><input type="number" id="f-sellPrice" min="0" required></div>
+      <div class="field"><label>구매일 (모르면 대략)</label><input type="date" id="f-buyDate"></div>
+      <div class="field"><label>구매가 (원)</label><input type="number" id="f-buyPrice" min="0"></div>
+      <div class="field full"><label>판매 사유</label><input type="text" id="f-reason" placeholder="예: 신형 교체로 처분, 선물 중복"></div>
+      <div class="field full"><button type="submit" class="primary">행 추가</button></div>
+    </form>
+
+    <div class="table-scroll">
+      <table id="ledgerTable">
+        <thead><tr>
+          <th>구분</th><th>판매일</th><th>플랫폼</th><th>품목</th><th>판매가</th><th>구매일</th><th>구매가</th>
+          <th>손익</th><th>보유기간</th><th>판매 사유</th><th></th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="stats" id="ledgerStats"></div>
+    <div class="note" id="flagNote" style="display:none;"></div>
+
+    <div class="toolbar">
+      <button class="ghost" id="csvBtn">CSV(엑셀) 내려받기</button>
+      <button class="ghost" id="clearBtn">전체 삭제</button>
+    </div>
+  </div>
+
+  <div class="card" id="syncCard" style="display:none;">
+    <h2>☁ 기기 간 동기화 (선택)</h2>
+    <p style="font-size:.9rem;color:var(--muted);margin-bottom:12px;">
+      구글 계정으로 로그인하면 판매 대장이 PC·폰 어디서나 같은 데이터로 유지됩니다.
+      데이터는 <b>내 기기에서 동기화 비밀번호로 암호화된 뒤</b> 올라가므로(종단간 암호화),
+      서비스 운영자를 포함해 누구도 내용을 볼 수 없습니다.
+    </p>
+    <div id="syncUI"></div>
+  </div>
+
+  <div class="card">
+    <h2>데이터 가져오기</h2>
+    <p style="font-size:.9rem;color:var(--muted);margin-bottom:10px;">
+      카드사·크림 계정에 직접 연결(API)하는 방식은 로그인 정보를 다뤄야 해서 이 서비스의 원칙(개인정보 외부 전송 없음)과 맞지 않습니다.
+      대신 파일 업로드·붙여넣기로 가져오며, 모든 처리는 브라우저 안에서만 이뤄집니다.
+    </p>
+
+    <details>
+      <summary>💳 카드 이용내역 불러오기 — 구매(매입) 증빙 연결</summary>
+      <p style="font-size:.88rem;color:var(--muted);margin:8px 0;">
+        카드사 홈페이지·앱에서 내려받은 이용내역 파일(<b>엑셀 .xlsx 또는 CSV</b>)을 변환 없이 그대로 올리세요.
+        이용일·이용금액·가맹점 열을 자동으로 인식합니다 (취소 건은 제외).
+        목록에서 해당 구매 건의 <b>[입력]</b>을 누르면 위 입력 폼의 구매일·구매가가 자동으로 채워집니다.
+        파일은 브라우저 안에서만 처리되며 어디에도 전송되지 않습니다.
+        (파일에 열기 암호가 걸려 있으면 엑셀에서 암호를 푼 뒤 저장해서 올리세요)
+      </p>
+      <input type="file" id="cardFile" accept=".csv,text/csv,.txt,.xls,.xlsx">
+      <span id="cardStatus" style="font-size:.85rem;color:var(--accent);margin-left:8px;"></span>
+      <div id="cardList" class="table-scroll"></div>
+    </details>
+
+    <details>
+      <summary>🔖 크림(KREAM) 판매내역 자동 추출 북마클릿 — 반자동 연동</summary>
+      <p style="font-size:.88rem;margin:8px 0;">
+        아래 파란 버튼은 일반 링크가 아니라 <b>실행 코드가 담긴 특수 즐겨찾기(북마클릿)</b>입니다.
+        즐겨찾기로 저장해 뒀다가 <b>크림 화면에서</b> 눌러야 동작합니다. 처음 한 번만 설정하면 됩니다.
+      </p>
+      <ol style="font-size:.88rem;margin:8px 0 8px 4px;">
+        <li><b>Ctrl + Shift + B</b>를 눌러 주소창 아래에 <b>즐겨찾기 바</b>(가로 줄)를 표시하세요.</li>
+        <li>아래 파란 버튼을 <b>마우스 왼쪽 버튼으로 꾹 누른 채</b> 즐겨찾기 바 위로 끌어다 놓으세요.
+          "크림 판매내역 추출" 즐겨찾기가 생깁니다.<br>
+          <span style="color:var(--muted);">드래그가 어려우면: [주소 복사] 클릭 → 즐겨찾기 바 빈 곳에 마우스 오른쪽 클릭 →
+          "페이지 추가" → 이름은 아무거나, URL 칸에 붙여넣기(Ctrl+V) → 저장.</span></li>
+        <li>크림(kream.co.kr)에 로그인해 판매내역 화면을 열고, <b>목록을 맨 아래까지 스크롤</b>해
+          모든 내역이 화면에 불러와지게 하세요 (화면에 보이는 것만 추출됩니다).
+          <br><span style="color:var(--muted);">▸ <b>보관 판매 → 정산완료 탭</b>: 정산금액이 표시되는 화면이라 <b>가격까지 자동으로</b> 들어옵니다 (권장)
+          <br>▸ <b>판매 내역 → 종료 탭</b>: 가격이 표시되지 않는 화면이라 판매가는 0원으로 들어오며, 각 행의 [수정] 버튼으로 채워야 합니다</span></li>
+        <li>그 화면에서 방금 만든 즐겨찾기를 누르면 <b>크림판매내역.csv</b>가 다운로드됩니다. (취소된 거래는 자동 제외)</li>
+        <li><b>판매가·수수료까지 정확히</b> 필요한 건이 있다면: 그 건의 <b>[보관 상세]를 연 상태에서</b> 즐겨찾기를 누르세요.
+          "1건 누적" 알림이 뜹니다. 다음 건의 상세를 열고 또 누르는 식으로 누적한 뒤, <b>목록 화면에서 누르면</b>
+          누적분이 <b>크림판매상세.csv</b>로 저장됩니다 (판매 총액이 판매가로, 수수료·정산금액은 판매사유 칸에 기록).
+          계좌번호 등 민감정보는 추출하지 않습니다.</li>
+        <li>받은 파일을 아래 <b>"판매 대장 CSV 복원"</b>으로 불러오면 대장에 리셀 행으로 추가됩니다.</li>
+      </ol>
+      <p style="margin:10px 0;">
+        <button type="button" class="ghost" id="kreamBmCopy" style="margin-right:6px;">주소 복사</button>
+        <a id="kreamBm" href="javascript:(function%20()%20%7B%0A%20%20if%20(!%2F(%5E%7C%5C.)kream%5C.co%5C.kr%24%2F.test(location.hostname))%20%7B%0A%20%20%20%20alert('%EC%9D%B4%20%EB%B2%84%ED%8A%BC%EC%9D%80%20%ED%81%AC%EB%A6%BC(kream.co.kr)%EC%97%90%EC%84%9C%EB%A7%8C%20%EB%8F%99%EC%9E%91%ED%95%A9%EB%8B%88%EB%8B%A4.%5Cn%ED%81%AC%EB%A6%BC%EC%97%90%20%EB%A1%9C%EA%B7%B8%EC%9D%B8%ED%95%B4%20%ED%8C%90%EB%A7%A4%EB%82%B4%EC%97%AD%20%ED%99%94%EB%A9%B4%EC%9D%84%20%EC%97%B0%20%EB%92%A4%20%EB%88%8C%EB%9F%AC%EC%A3%BC%EC%84%B8%EC%9A%94.')%3B%0A%20%20%20%20return%3B%0A%20%20%7D%0A%20%20var%20KEY%20%3D%20'tax-helper-kream-details-v1'%3B%0A%20%20var%20lines%20%3D%20document.body.innerText.split(%2F%5Cr%3F%5Cn%2F).map(function%20(l)%20%7B%20return%20l.trim()%3B%20%7D).filter(Boolean)%3B%0A%0A%20%20var%20dateReLoose%20%3D%20%2F(20%5Cd%7B2%7D%7C%5Cd%7B2%7D)%5B.%5C-%5C%2F%5D(%5Cd%7B1%2C2%7D)%5B.%5C-%5C%2F%5D(%5Cd%7B1%2C2%7D)%2F%3B%0A%20%20function%20normDateLoose(s)%20%7B%0A%20%20%20%20var%20m%20%3D%20String(s).match(dateReLoose)%3B%0A%20%20%20%20if%20(!m)%20return%20null%3B%0A%20%20%20%20var%20y%20%3D%20m%5B1%5D.length%20%3D%3D%3D%202%20%3F%20'20'%20%2B%20m%5B1%5D%20%3A%20m%5B1%5D%3B%0A%20%20%20%20return%20y%20%2B%20'-'%20%2B%20('0'%20%2B%20m%5B2%5D).slice(-2)%20%2B%20'-'%20%2B%20('0'%20%2B%20m%5B3%5D).slice(-2)%3B%0A%20%20%7D%0A%20%20function%20normDateStrict(s)%20%7B%0A%20%20%20%20return%20dateReLoose.test(String(s).trim())%20%26%26%20%2F%5E%5B%5Cd.%5C-%5C%2F%5Cs%3A%5D%2B%24%2F.test(String(s).trim())%20%3F%20normDateLoose(s)%20%3A%20null%3B%0A%20%20%7D%0A%20%20function%20amt(s)%20%7B%0A%20%20%20%20var%20t%20%3D%20String(s).replace(%2F%5B-%EC%9B%90%2C%5Cs%5D%2Fg%2C%20'')%3B%0A%20%20%20%20return%20%2F%5E%5Cd%2B%24%2F.test(t)%20%3F%20Number(t)%20%3A%20null%3B%0A%20%20%7D%0A%20%20function%20fmtWon(n)%20%7B%20return%20n%20%3D%3D%3D%20null%20%3F%20''%20%3A%20String(n).replace(%2F%5CB(%3F%3D(%5Cd%7B3%7D)%2B(%3F!%5Cd))%2Fg%2C%20'%2C')%3B%20%7D%0A%20%20function%20valueAfterFrom(label%2C%20from)%20%7B%0A%20%20%20%20var%20i%20%3D%20lines.indexOf(label%2C%20from)%3B%0A%20%20%20%20return%20i%20%3E%3D%200%20%26%26%20i%20%2B%201%20%3C%20lines.length%20%3F%20lines%5Bi%20%2B%201%5D%20%3A%20null%3B%0A%20%20%7D%0A%20%20function%20loadBuf()%20%7B%20try%20%7B%20return%20JSON.parse(localStorage.getItem(KEY))%20%7C%7C%20%5B%5D%3B%20%7D%20catch%20(e)%20%7B%20return%20%5B%5D%3B%20%7D%20%7D%0A%0A%20%20var%20modalStart%20%3D%20lines.indexOf('%ED%8C%90%EB%A7%A4%20%EC%A0%95%EC%82%B0%20%EC%A0%95%EB%B3%B4')%3B%0A%20%20if%20(modalStart%20%3E%3D%200%20%26%26%20lines.indexOf('%EA%B1%B0%EB%9E%98%EC%9D%BC%EC%8B%9C'%2C%20modalStart)%20%3E%3D%200)%20%7B%0A%20%20%20%20var%20num%20%3D%20null%3B%0A%20%20%20%20for%20(var%20i2%20%3D%200%3B%20i2%20%3C%20lines.length%3B%20i2%2B%2B)%20%7B%0A%20%20%20%20%20%20var%20mNum%20%3D%20lines%5Bi2%5D.match(%2F%5E%EB%B3%B4%EA%B4%80%EB%B2%88%ED%98%B8%5Cs*(I-%5BA-Z0-9-%5D%2B)%2Fi)%3B%0A%20%20%20%20%20%20if%20(mNum)%20%7B%20num%20%3D%20mNum%5B1%5D%3B%20break%3B%20%7D%0A%20%20%20%20%7D%0A%20%20%20%20var%20name%20%3D%20null%2C%20size%20%3D%20null%3B%0A%20%20%20%20var%20k%20%3D%20lines.indexOf('%EC%83%81%ED%92%88%EC%83%81%EC%84%B8')%3B%20%20%20%2F%2F%20%EB%AA%A8%EB%8B%AC%EC%97%90%EB%A7%8C%20%EC%9E%88%EB%8A%94%20%EB%9D%BC%EB%B2%A8%20(%EB%AA%A9%EB%A1%9D%EC%9D%80%20'%EB%B3%B4%EA%B4%80%20%EC%83%81%EC%84%B8')%0A%20%20%20%20if%20(k%20%3E%3D%202)%20%7B%20size%20%3D%20lines%5Bk%20-%201%5D%3B%20name%20%3D%20lines%5Bk%20-%202%5D%3B%20%7D%0A%20%20%20%20var%20sellPrice%20%3D%20amt(valueAfterFrom('%ED%8C%90%EB%A7%A4%EA%B0%80'%2C%20modalStart))%3B%0A%20%20%20%20var%20fee%20%3D%20amt(valueAfterFrom('%EC%88%98%EC%88%98%EB%A3%8C'%2C%20modalStart))%3B%0A%20%20%20%20var%20settle%20%3D%20amt(valueAfterFrom('%EC%A0%95%EC%82%B0%EA%B8%88%EC%95%A1'%2C%20modalStart))%3B%0A%20%20%20%20var%20dealDate%20%3D%20normDateLoose(valueAfterFrom('%EA%B1%B0%EB%9E%98%EC%9D%BC%EC%8B%9C'%2C%20modalStart)%20%7C%7C%20'')%3B%0A%20%20%20%20if%20(!name%20%7C%7C%20sellPrice%20%3D%3D%3D%20null)%20%7B%0A%20%20%20%20%20%20alert('%EC%83%81%EC%84%B8%20%EC%A0%95%EB%B3%B4%EB%A5%BC%20%EC%9D%BD%EC%A7%80%20%EB%AA%BB%ED%96%88%EC%8A%B5%EB%8B%88%EB%8B%A4.%20%EB%B3%B4%EA%B4%80%20%EC%83%81%EC%84%B8%20%ED%8C%9D%EC%97%85%EC%9D%B4%20%EC%99%84%EC%A0%84%ED%9E%88%20%EC%97%B4%EB%A6%B0%20%EC%83%81%ED%83%9C%EC%97%90%EC%84%9C%20%EB%8B%A4%EC%8B%9C%20%EB%88%8C%EB%9F%AC%EC%A3%BC%EC%84%B8%EC%9A%94.')%3B%0A%20%20%20%20%20%20return%3B%0A%20%20%20%20%7D%0A%20%20%20%20var%20buf%20%3D%20loadBuf()%3B%0A%20%20%20%20var%20dup%20%3D%20num%20%26%26%20buf.some(function%20(b)%20%7B%20return%20b.num%20%3D%3D%3D%20num%3B%20%7D)%3B%0A%20%20%20%20if%20(dup)%20%7B%0A%20%20%20%20%20%20alert('%EC%9D%B4%EB%AF%B8%20%EB%88%84%EC%A0%81%EB%90%9C%20%EA%B1%B4%EC%9E%85%EB%8B%88%EB%8B%A4%20('%20%2B%20num%20%2B%20').%20%ED%98%84%EC%9E%AC%20'%20%2B%20buf.length%20%2B%20'%EA%B1%B4%20%EB%88%84%EC%A0%81.%5Cn%EB%8B%A4%EC%9D%8C%20%EA%B1%B4%EC%9D%98%20%EB%B3%B4%EA%B4%80%20%EC%83%81%EC%84%B8%EB%A5%BC%20%EC%97%B4%EA%B3%A0%20%EB%88%8C%EB%9F%AC%EC%A3%BC%EC%84%B8%EC%9A%94.%5Cn%EB%AA%A9%EB%A1%9D%20%ED%99%94%EB%A9%B4%EC%97%90%EC%84%9C%20%EB%88%84%EB%A5%B4%EB%A9%B4%20CSV%EB%A1%9C%20%EC%A0%80%EC%9E%A5%EB%90%A9%EB%8B%88%EB%8B%A4.')%3B%0A%20%20%20%20%20%20return%3B%0A%20%20%20%20%7D%0A%20%20%20%20buf.push(%7B%0A%20%20%20%20%20%20num%3A%20num%20%7C%7C%20''%2C%20name%3A%20size%20%3F%20name%20%2B%20'%20('%20%2B%20size%20%2B%20')'%20%3A%20name%2C%0A%20%20%20%20%20%20date%3A%20dealDate%20%7C%7C%20''%2C%20price%3A%20sellPrice%2C%20fee%3A%20fee%2C%20settle%3A%20settle%0A%20%20%20%20%7D)%3B%0A%20%20%20%20localStorage.setItem(KEY%2C%20JSON.stringify(buf))%3B%0A%20%20%20%20alert(buf.length%20%2B%20'%EA%B1%B4%20%EB%88%84%EC%A0%81%ED%96%88%EC%8A%B5%EB%8B%88%EB%8B%A4%3A%20'%20%2B%20name%20%2B%20'%20%2F%20%ED%8C%90%EB%A7%A4%EA%B0%80%20'%20%2B%20fmtWon(sellPrice)%20%2B%20'%EC%9B%90'%20%2B%0A%20%20%20%20%20%20(fee%20!%3D%3D%20null%20%3F%20'%20%2F%20%EC%88%98%EC%88%98%EB%A3%8C%20'%20%2B%20fmtWon(fee)%20%2B%20'%EC%9B%90'%20%3A%20'')%20%2B%0A%20%20%20%20%20%20'%5Cn%5Cn%EB%8B%A4%EC%9D%8C%20%EA%B1%B4%EC%9D%98%20%EB%B3%B4%EA%B4%80%20%EC%83%81%EC%84%B8%EB%A5%BC%20%EC%97%B4%EA%B3%A0%20%EB%8B%A4%EC%8B%9C%20%EB%88%84%EB%A5%B4%EC%84%B8%EC%9A%94.%5Cn%EB%AA%A9%EB%A1%9D%20%ED%99%94%EB%A9%B4%EC%97%90%EC%84%9C%20%EB%88%84%EB%A5%B4%EB%A9%B4%20%EB%88%84%EC%A0%81%EB%B6%84%EC%9D%B4%20CSV%EB%A1%9C%20%EC%A0%80%EC%9E%A5%EB%90%A9%EB%8B%88%EB%8B%A4.')%3B%0A%20%20%20%20return%3B%0A%20%20%7D%0A%0A%20%20function%20esc(v)%20%7B%20return%20'%22'%20%2B%20String(v%20%3D%3D%20null%20%3F%20''%20%3A%20v).replace(%2F%22%2Fg%2C%20'%22%22')%20%2B%20'%22'%3B%20%7D%0A%20%20var%20header%20%3D%20%5B'%EA%B5%AC%EB%B6%84'%2C%20'%ED%8C%90%EB%A7%A4%EC%9D%BC'%2C%20'%ED%94%8C%EB%9E%AB%ED%8F%BC'%2C%20'%ED%92%88%EB%AA%A9'%2C%20'%ED%8C%90%EB%A7%A4%EA%B0%80'%2C%20'%EA%B5%AC%EB%A7%A4%EC%9D%BC'%2C%20'%EA%B5%AC%EB%A7%A4%EA%B0%80'%2C%20'%EC%86%90%EC%9D%B5'%2C%20'%EB%B3%B4%EC%9C%A0%EA%B8%B0%EA%B0%84'%2C%20'%ED%8C%90%EB%A7%A4%EC%82%AC%EC%9C%A0'%5D%3B%0A%20%20function%20downloadCSV(rows%2C%20fname%2C%20msg)%20%7B%0A%20%20%20%20var%20csv%20%3D%20'%5CuFEFF'%20%2B%20header.map(esc).join('%2C')%20%2B%20'%5Cr%5Cn'%20%2B%20rows.join('%5Cr%5Cn')%3B%0A%20%20%20%20var%20a%20%3D%20document.createElement('a')%3B%0A%20%20%20%20a.href%20%3D%20URL.createObjectURL(new%20Blob(%5Bcsv%5D%2C%20%7B%20type%3A%20'text%2Fcsv%3Bcharset%3Dutf-8%3B'%20%7D))%3B%0A%20%20%20%20a.download%20%3D%20fname%3B%0A%20%20%20%20a.click()%3B%0A%20%20%20%20alert(msg)%3B%0A%20%20%7D%0A%0A%20%20var%20buf%20%3D%20loadBuf()%3B%0A%20%20if%20(buf.length)%20%7B%0A%20%20%20%20var%20rowsD%20%3D%20buf.map(function%20(b)%20%7B%0A%20%20%20%20%20%20var%20memo%20%3D%20%5B%5D%3B%0A%20%20%20%20%20%20if%20(b.fee%20!%3D%3D%20null%20%26%26%20b.fee%20!%3D%3D%20undefined)%20memo.push('%ED%81%AC%EB%A6%BC%20%EC%88%98%EC%88%98%EB%A3%8C%20'%20%2B%20fmtWon(b.fee)%20%2B%20'%EC%9B%90')%3B%0A%20%20%20%20%20%20if%20(b.settle%20!%3D%3D%20null%20%26%26%20b.settle%20!%3D%3D%20undefined)%20memo.push('%EC%A0%95%EC%82%B0%EA%B8%88%EC%95%A1%20'%20%2B%20fmtWon(b.settle)%20%2B%20'%EC%9B%90')%3B%0A%20%20%20%20%20%20if%20(b.num)%20memo.push(b.num)%3B%0A%20%20%20%20%20%20return%20%5B'%EB%A6%AC%EC%85%80'%2C%20b.date%2C%20'%ED%81%AC%EB%A6%BC(KREAM)'%2C%20b.name%2C%20b.price%2C%20''%2C%20''%2C%20''%2C%20''%2C%20memo.join('%20%2F%20')%5D.map(esc).join('%2C')%3B%0A%20%20%20%20%7D)%3B%0A%20%20%20%20localStorage.removeItem(KEY)%3B%0A%20%20%20%20downloadCSV(rowsD%2C%20'%ED%81%AC%EB%A6%BC%ED%8C%90%EB%A7%A4%EC%83%81%EC%84%B8.csv'%2C%0A%20%20%20%20%20%20'%EB%88%84%EC%A0%81%EB%90%9C%20%EC%83%81%EC%84%B8%20'%20%2B%20buf.length%20%2B%20'%EA%B1%B4%EC%9D%84%20%ED%81%AC%EB%A6%BC%ED%8C%90%EB%A7%A4%EC%83%81%EC%84%B8.csv%EB%A1%9C%20%EB%82%B4%EB%A0%A4%EB%B0%9B%EC%95%98%EC%8A%B5%EB%8B%88%EB%8B%A4%20(%EB%88%84%EC%A0%81%20%EB%AA%A9%EB%A1%9D%EC%9D%80%20%EB%B9%84%EC%9B%A0%EC%8A%B5%EB%8B%88%EB%8B%A4).%5Cn'%20%2B%0A%20%20%20%20%20%20'%EC%A4%91%EA%B3%A0%EA%B1%B0%EB%9E%98%20%EC%84%B8%EA%B8%88%20%EB%8F%84%EC%9A%B0%EB%AF%B8%20%3E%20%E2%91%A1%20%ED%8C%90%EB%A7%A4%20%EB%8C%80%EC%9E%A5%20%3E%20CSV%20%EB%B3%B5%EC%9B%90%EC%9C%BC%EB%A1%9C%20%EB%B6%88%EB%9F%AC%EC%98%A4%EC%84%B8%EC%9A%94.%5Cn%ED%8C%90%EB%A7%A4%EA%B0%80%EB%8A%94%20%EC%B4%9D%20%ED%8C%90%EB%A7%A4%EA%B8%88%EC%95%A1%EC%9D%B4%EB%A9%B0%2C%20%EC%88%98%EC%88%98%EB%A3%8C%EB%8A%94%20%ED%8C%90%EB%A7%A4%EC%82%AC%EC%9C%A0%20%EC%B9%B8%EC%97%90%20%EA%B8%B0%EB%A1%9D%EB%90%98%EC%96%B4%20%EC%9E%88%EC%8A%B5%EB%8B%88%EB%8B%A4.')%3B%0A%20%20%20%20return%3B%0A%20%20%7D%0A%0A%20%20var%20items%20%3D%20%5B%5D%3B%0A%0A%20%20lines.forEach(function%20(l%2C%20i)%20%7B%0A%20%20%20%20if%20(l%20!%3D%3D%20'%EC%A0%95%EC%82%B0%EC%9D%BC')%20return%3B%0A%20%20%20%20var%20date%20%3D%20normDateStrict(lines%5Bi%20%2B%201%5D%20%7C%7C%20'')%3B%0A%20%20%20%20if%20(!date)%20return%3B%0A%20%20%20%20var%20amount%20%3D%20null%2C%20size%20%3D%20null%2C%20name%20%3D%20null%2C%20j%2C%20c%3B%0A%20%20%20%20for%20(j%20%3D%20i%20-%201%3B%20j%20%3E%3D%20Math.max(0%2C%20i%20-%2010)%3B%20j--)%20%7B%0A%20%20%20%20%20%20c%20%3D%20lines%5Bj%5D%3B%0A%20%20%20%20%20%20if%20(c%20%3D%3D%3D%20'%EC%A0%95%EC%82%B0%EC%9D%BC')%20break%3B%0A%20%20%20%20%20%20if%20(c%20%3D%3D%3D%20'%EC%A0%95%EC%82%B0%EA%B8%88%EC%95%A1'%20%26%26%20amount%20%3D%3D%3D%20null)%20amount%20%3D%20amt(lines%5Bj%20%2B%201%5D%20%7C%7C%20'')%3B%0A%20%20%20%20%20%20if%20(c%20%3D%3D%3D%20'%EC%82%AC%EC%9D%B4%EC%A6%88'%20%26%26%20size%20%3D%3D%3D%20null)%20size%20%3D%20lines%5Bj%20%2B%201%5D%20%7C%7C%20''%3B%0A%20%20%20%20%20%20if%20(%2F%5EI-%5BA-Z0-9-%5D%2B%24%2Fi.test(c)%20%26%26%20!name)%20%7B%0A%20%20%20%20%20%20%20%20var%20cand%20%3D%20lines%5Bj%20-%201%5D%20%7C%7C%20''%3B%0A%20%20%20%20%20%20%20%20if%20(cand%20%3D%3D%3D%20'-'%20%7C%7C%20cand.length%20%3C%203)%20cand%20%3D%20lines%5Bj%20-%202%5D%20%7C%7C%20''%3B%0A%20%20%20%20%20%20%20%20if%20(cand.length%20%3E%3D%203)%20name%20%3D%20cand%3B%0A%20%20%20%20%20%20%20%20break%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%20%20%20%20if%20(name%20%26%26%20amount%20!%3D%3D%20null)%20%7B%0A%20%20%20%20%20%20items.push(%7B%20name%3A%20size%20%3F%20name%20%2B%20'%20('%20%2B%20size%20%2B%20')'%20%3A%20name%2C%20date%3A%20date%2C%20price%3A%20amount%2C%20memo%3A%20'%ED%81%AC%EB%A6%BC%20%EC%A0%95%EC%82%B0%EA%B8%88%EC%95%A1%20%EA%B8%B0%EC%A4%80'%20%7D)%3B%0A%20%20%20%20%7D%0A%20%20%7D)%3B%0A%0A%20%20var%20doneRe%20%3D%20%2F%5E(%EC%A0%95%EC%82%B0%EC%99%84%EB%A3%8C%7C%ED%8C%90%EB%A7%A4%EC%99%84%EB%A3%8C%7C%EB%B0%B0%EC%86%A1%EC%99%84%EB%A3%8C%7C%EA%B1%B0%EB%9E%98%EC%99%84%EB%A3%8C)%24%2F%3B%0A%20%20var%20cancelRe%20%3D%20%2F%5E(%EC%B7%A8%EC%86%8C%EC%99%84%EB%A3%8C%7C%EA%B1%B0%EB%9E%98%EC%8B%A4%ED%8C%A8%7C%EB%B0%98%EC%86%A1%EC%99%84%EB%A3%8C%7C%ED%8C%90%EB%A7%A4%EA%B1%B0%EB%B6%80)%24%2F%3B%0A%20%20var%20noiseRe%20%3D%20%2F(%ED%95%A9%EA%B2%A9%7C%EB%B6%88%ED%95%A9%EA%B2%A9%7C%EA%B2%80%EC%88%98)%7C%5E-%24%2F%3B%0A%20%20var%20sizeRe%20%3D%20%2F%5E(ONE%20%3FSIZE%7CFREE%7C%5BA-Z%5D%7B1%2C4%7D%7C%5BWM%5D%3F%5Cd%7B2%2C3%7D(%5C.%5Cd)%3F%7CUS%20%3F%5Cd%7B1%2C2%7D(%5C.%5Cd)%3F%7CEU%20%3F%5Cd%7B2%2C3%7D%7C%5Cd%7B2%2C3%7D%5Cs*-%5Cs*%5B0-9A-Za-z%EA%B0%80-%ED%9E%A3%20%5D%2B)%24%2Fi%3B%0A%20%20if%20(!items.length)%20%7B%0A%20%20%20%20lines.forEach(function%20(l%2C%20i)%20%7B%0A%20%20%20%20%20%20if%20(cancelRe.test(l)%20%7C%7C%20!doneRe.test(l))%20return%3B%0A%20%20%20%20%20%20var%20date%20%3D%20null%2C%20size%20%3D%20null%2C%20name%20%3D%20null%2C%20j%2C%20c%3B%0A%20%20%20%20%20%20for%20(j%20%3D%20i%20-%201%3B%20j%20%3E%3D%20Math.max(0%2C%20i%20-%206)%20%26%26%20!name%3B%20j--)%20%7B%0A%20%20%20%20%20%20%20%20c%20%3D%20lines%5Bj%5D%3B%0A%20%20%20%20%20%20%20%20if%20(doneRe.test(c)%20%7C%7C%20cancelRe.test(c))%20break%3B%0A%20%20%20%20%20%20%20%20if%20(noiseRe.test(c))%20continue%3B%0A%20%20%20%20%20%20%20%20if%20(!date)%20%7B%20var%20d%20%3D%20normDateStrict(c)%3B%20if%20(d)%20%7B%20date%20%3D%20d%3B%20continue%3B%20%7D%20%7D%0A%20%20%20%20%20%20%20%20if%20(!size%20%26%26%20sizeRe.test(c))%20%7B%20size%20%3D%20c%3B%20continue%3B%20%7D%0A%20%20%20%20%20%20%20%20if%20(c.length%20%3E%3D%204%20%26%26%20!sizeRe.test(c)%20%26%26%20!normDateStrict(c))%20name%20%3D%20c%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20if%20(name)%20items.push(%7B%20name%3A%20size%20%3F%20name%20%2B%20'%20('%20%2B%20size%20%2B%20')'%20%3A%20name%2C%20date%3A%20date%20%7C%7C%20''%2C%20price%3A%20''%2C%20memo%3A%20''%20%7D)%3B%0A%20%20%20%20%7D)%3B%0A%20%20%7D%0A%0A%20%20if%20(!items.length)%20%7B%0A%20%20%20%20var%20isPrice%20%3D%20function%20(s)%20%7B%20return%20%2F%5E%5B%5Cd%2C%5D%7B4%2C%7D%5Cs*%EC%9B%90%3F%24%2F.test(s)%20%26%26%20(s.indexOf('%2C')%20%3E%3D%200%20%7C%7C%20s.indexOf('%EC%9B%90')%20%3E%3D%200)%3B%20%7D%3B%0A%20%20%20%20lines.forEach(function%20(l%2C%20i)%20%7B%0A%20%20%20%20%20%20if%20(!isPrice(l))%20return%3B%0A%20%20%20%20%20%20var%20name%20%3D%20null%2C%20date%20%3D%20null%2C%20j%2C%20c%3B%0A%20%20%20%20%20%20for%20(j%20%3D%20i%20-%201%3B%20j%20%3E%3D%20Math.max(0%2C%20i%20-%205)%20%26%26%20!name%3B%20j--)%20%7B%0A%20%20%20%20%20%20%20%20c%20%3D%20lines%5Bj%5D%3B%0A%20%20%20%20%20%20%20%20if%20(!isPrice(c)%20%26%26%20!normDateStrict(c)%20%26%26%20!%2F%5E%5Cd%2B(%5C.%5Cd%2B)%3F%24%2F.test(c)%20%26%26%20!sizeRe.test(c)%20%26%26%20c.length%20%3E%3D%204)%20name%20%3D%20c%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20for%20(j%20%3D%20Math.max(0%2C%20i%20-%203)%3B%20j%20%3C%3D%20Math.min(lines.length%20-%201%2C%20i%20%2B%203)%20%26%26%20!date%3B%20j%2B%2B)%20%7B%0A%20%20%20%20%20%20%20%20var%20d2%20%3D%20normDateStrict(lines%5Bj%5D)%3B%20if%20(d2)%20date%20%3D%20d2%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20if%20(name)%20items.push(%7B%20name%3A%20name%2C%20date%3A%20date%20%7C%7C%20''%2C%20price%3A%20Number(l.replace(%2F%5B%EC%9B%90%2C%5Cs%5D%2Fg%2C%20''))%2C%20memo%3A%20''%20%7D)%3B%0A%20%20%20%20%7D)%3B%0A%20%20%7D%0A%0A%20%20if%20(!items.length)%20%7B%0A%20%20%20%20alert('%ED%8C%90%EB%A7%A4%EB%82%B4%EC%97%AD%EC%9D%84%20%EC%B0%BE%EC%A7%80%20%EB%AA%BB%ED%96%88%EC%8A%B5%EB%8B%88%EB%8B%A4.%5Cn%EB%B3%B4%EA%B4%80%20%ED%8C%90%EB%A7%A4%20%3E%20%EC%A0%95%EC%82%B0%EC%99%84%EB%A3%8C%20%ED%83%AD%20%EB%98%90%EB%8A%94%20%ED%8C%90%EB%A7%A4%20%EB%82%B4%EC%97%AD%20%3E%20%EC%A2%85%EB%A3%8C%20%ED%83%AD%EC%97%90%EC%84%9C%20%EB%AA%A9%EB%A1%9D%EC%9D%B4%20%EB%B3%B4%EC%9D%B4%EB%8A%94%20%EC%83%81%ED%83%9C%EB%A1%9C%20%EB%88%8C%EB%9F%AC%EC%A3%BC%EC%84%B8%EC%9A%94.')%3B%0A%20%20%20%20return%3B%0A%20%20%7D%0A%20%20var%20rowsL%20%3D%20items.map(function%20(it)%20%7B%0A%20%20%20%20return%20%5B'%EB%A6%AC%EC%85%80'%2C%20it.date%2C%20'%ED%81%AC%EB%A6%BC(KREAM)'%2C%20it.name%2C%20it.price%20%3D%3D%3D%20''%20%3F%20''%20%3A%20it.price%2C%20''%2C%20''%2C%20''%2C%20''%2C%20it.memo%20%7C%7C%20''%5D.map(esc).join('%2C')%3B%0A%20%20%7D)%3B%0A%20%20downloadCSV(rowsL%2C%20'%ED%81%AC%EB%A6%BC%ED%8C%90%EB%A7%A4%EB%82%B4%EC%97%AD.csv'%2C%0A%20%20%20%20items.length%20%2B%20'%EA%B1%B4%EC%9D%84%20%ED%81%AC%EB%A6%BC%ED%8C%90%EB%A7%A4%EB%82%B4%EC%97%AD.csv%EB%A1%9C%20%EB%82%B4%EB%A0%A4%EB%B0%9B%EC%95%98%EC%8A%B5%EB%8B%88%EB%8B%A4.%5Cn%EC%A4%91%EA%B3%A0%EA%B1%B0%EB%9E%98%20%EC%84%B8%EA%B8%88%20%EB%8F%84%EC%9A%B0%EB%AF%B8%20%3E%20%E2%91%A1%20%ED%8C%90%EB%A7%A4%20%EB%8C%80%EC%9E%A5%20%3E%20CSV%20%EB%B3%B5%EC%9B%90%EC%9C%BC%EB%A1%9C%20%EB%B6%88%EB%9F%AC%EC%98%A4%EC%84%B8%EC%9A%94.%5Cn%5Cn'%20%2B%0A%20%20%20%20'%ED%8C%90%EB%A7%A4%EA%B0%80%C2%B7%EC%88%98%EC%88%98%EB%A3%8C%EA%B9%8C%EC%A7%80%20%EC%A0%95%ED%99%95%ED%9E%88%20%EB%84%A3%EC%9C%BC%EB%A0%A4%EB%A9%B4%3A%20%EA%B0%81%20%EA%B1%B4%EC%9D%98%20%5B%EB%B3%B4%EA%B4%80%20%EC%83%81%EC%84%B8%5D%EB%A5%BC%20%EC%97%B0%20%EB%92%A4%20%EC%9D%B4%20%EB%B2%84%ED%8A%BC%EC%9D%84%20%EB%88%84%EB%A5%B4%EB%A9%B4%20%EB%88%84%EC%A0%81%EB%90%98%EA%B3%A0%2C%5Cn%EB%AA%A9%EB%A1%9D%20%ED%99%94%EB%A9%B4%EC%97%90%EC%84%9C%20%EB%8B%A4%EC%8B%9C%20%EB%88%84%EB%A5%B4%EB%A9%B4%20%EB%88%84%EC%A0%81%EB%B6%84%EC%9D%B4%20CSV%EB%A1%9C%20%EC%A0%80%EC%9E%A5%EB%90%A9%EB%8B%88%EB%8B%A4.')%3B%0A%7D)()%3B%0A" onclick="return false;"
+           style="display:inline-block;padding:9px 16px;border:1px solid var(--accent);border-radius:8px;background:var(--accent-light);color:var(--accent);font-weight:700;text-decoration:none;cursor:grab;">📥 크림 판매내역 추출</a>
+        <span style="font-size:.85rem;color:var(--muted);">← 위 2번 단계에서 끌어다 놓을 버튼 (이 페이지에서 클릭해도 아무 일도 일어나지 않습니다)</span>
+      </p>
+      <div class="note" style="font-size:.85rem;">
+        <b>보안 설계</b>: 이 북마클릿은 ▸ 크림 도메인에서만 동작하고 ▸ 네트워크 요청을 일절 하지 않으며
+        ▸ 로그인 정보·쿠키에 접근하지 않고 ▸ 화면에 보이는 텍스트만 읽어 본인 PC에 파일로 저장합니다.
+        전체 소스는 같은 폴더의 <b>kream_bookmarklet.js</b>에서 그대로 확인할 수 있습니다.
+      </div>
+      <div class="warn" style="font-size:.85rem;">
+        일반 원칙: 출처를 확인하지 않은 북마클릿·확장프로그램을 금융/쇼핑 사이트에서 실행하지 마세요.
+        이 코드도 소스를 직접 확인한 뒤 쓰는 습관을 권합니다. 크림 화면 구성이 바뀌면 인식이 안 될 수 있으며,
+        그 경우 아래 "붙여넣기" 방식을 사용하세요.
+      </div>
+    </details>
+
+    <details>
+      <summary>👟 크림(KREAM) 판매내역 붙여넣기 — 판매 행 일괄 추가</summary>
+      <p style="font-size:.88rem;color:var(--muted);margin:8px 0;">
+        크림 앱/웹의 <b>판매내역(종료) 화면</b>에서 텍스트를 복사해 아래에 붙여넣고 [분석]을 누르세요.
+        인식된 품목·체결일·금액을 확인·수정한 뒤 대장에 추가합니다. 인식이 안 되는 항목은 위 입력 폼으로 직접 추가하세요.
+      </p>
+      <textarea id="kreamText" style="width:100%;min-height:110px;font-family:inherit;font-size:.88rem;padding:10px;border:1px solid var(--line);border-radius:8px;" placeholder="예)&#10;뉴발란스 2002R 레드&#10;280&#10;25/11/13&#10;정산완료"></textarea>
+      <div class="toolbar" style="margin-top:8px;">
+        <button class="ghost" id="kreamParse">분석</button>
+        <label style="font-size:.88rem;">추가할 구분:
+          <select id="kreamType" style="padding:4px;border:1px solid var(--line);border-radius:6px;">
+            <option>리셀</option><option>중고거래</option>
+          </select>
+        </label>
+      </div>
+      <div id="kreamPreview" class="table-scroll"></div>
+      <div class="toolbar" id="kreamAddBar" style="display:none;">
+        <button class="ghost" id="kreamAdd">선택한 항목 대장에 추가</button>
+        <span id="kreamStatus" style="font-size:.85rem;color:var(--accent);"></span>
+      </div>
+    </details>
+
+    <details>
+      <summary>📂 판매 대장 CSV 복원 — 백업 파일 다시 불러오기</summary>
+      <p style="font-size:.88rem;color:var(--muted);margin:8px 0;">
+        이 페이지에서 내려받았던 <b>판매대장.csv</b>를 올리면 내역이 현재 대장에 추가됩니다.
+        브라우저 데이터를 지웠거나 다른 기기로 옮길 때 사용하세요. (중복 검사는 하지 않으니 빈 대장에 복원하는 것을 권장)
+      </p>
+      <input type="file" id="restoreFile" accept=".csv,text/csv">
+      <span id="restoreStatus" style="font-size:.85rem;color:var(--accent);margin-left:8px;"></span>
+    </details>
+  </div>
+</section>
+
+<!-- ============ ③ 신고 안내 ============ -->
+<section class="tab" id="tab-guide">
+  <div class="card">
+    <h2>리셀 수익이 있었다면 — 신고 안내</h2>
+    <p style="font-size:.94rem;">
+      되팔 목적으로 사서 반복 판매한 사실이 있다면, 안내문 단계에서 <b>자진 신고</b>하는 것이 가장 유리합니다.
+      플랫폼 거래내역은 이미 국세청에 제출되어 있으므로 무시하거나 부인하는 것은 위험합니다.
+    </p>
+
+    <h3>종합소득세</h3>
+    <ul>
+      <li>사업소득(판매 이익)에 대해 다음 해 5월에 신고 — 놓쳤다면 <b>기한후신고</b>가 가능합니다 (홈택스 → 세금신고 → 종합소득세 → 기한후신고)</li>
+      <li><b>필요경비(물건 산 값·수수료·배송비)를 빼고 이익에만</b> 과세 — 구매 영수증·카드내역 등 증빙을 최대한 모으세요</li>
+      <li>세율: 과세표준에 따라 6~45% 누진 (2026년 기준)</li>
+    </ul>
+
+    <h3>가산세 (신고가 늦을수록 커집니다)</h3>
+    <ul>
+      <li>무신고가산세: 내야 할 세액의 20% (부정행위 시 40%)</li>
+      <li>납부지연가산세: 하루 0.022% (연 약 8%)</li>
+      <li>기한후신고를 빨리 할수록 감면 폭이 커집니다 (1개월 내 50%, 3개월 내 30%, 6개월 내 20% 감면)</li>
+    </ul>
+
+    <h3>부가가치세</h3>
+    <ul>
+      <li>계속·반복 판매로 사업자에 해당하면 <b>사업자등록 의무</b>가 있습니다</li>
+      <li>간이과세: 연 매출(공급대가) 1억 400만 원 미만 / <b>4,800만 원 미만이면 부가세 납부 면제</b> (신고는 필요)</li>
+      <li><b>주의</b>: 사업자등록 전 매입세액은 공제되지 않아, 등록 없이 판매하면 이익이 아니라 <b>매출 전액의 10%</b>가 부과될 수 있습니다. 리셀을 계속할 계획이면 등록을 미루지 마세요.</li>
+    </ul>
+
+    <h3>도움받을 곳</h3>
+    <ul>
+      <li><b>국세상담센터 126</b> — 무료 전화 상담 (평일 9~18시)</li>
+      <li><b>마을세무사</b> — 지자체 무료 세무상담 (시·군·구청 홈페이지에서 확인)</li>
+      <li>매출 규모가 수천만 원대라면 세무사 상담을 권합니다 — 특히 부가가치세 문제는 대응에 따라 세액 차이가 큽니다</li>
+    </ul>
+
+    <div class="warn">위 수치(세율·간이과세 기준·가산세율)는 2026년 8월 기준이며 세법 개정으로 바뀔 수 있습니다. 신고 전 홈택스 또는 126에서 현행 기준을 확인하세요.</div>
+  </div>
+</section>
+
+<!-- ============ ④ 걸렸을 때 ============ -->
+<section class="tab" id="tab-caught">
+
+  <div class="card">
+    <h2>국세청에서 연락이 왔다면 — 받은 문서부터 확인하세요</h2>
+    <p style="font-size:.92rem;color:var(--muted);margin-bottom:4px;">문서 유형마다 의미와 대응이 다릅니다. 해당하는 것을 선택하세요.</p>
+    <div class="wizard-btns">
+      <button data-w="w0">📱 문자·전화가 진짜인지 모르겠어요</button>
+      <button data-w="w1">📄 종합소득세 신고 안내문</button>
+      <button data-w="w2">📋 해명(소명)자료 제출 요구</button>
+      <button data-w="w3">🔍 세무조사 사전통지</button>
+      <button data-w="w4">💸 이미 고지서(납부고지)가 나왔어요</button>
+    </div>
+
+    <div class="wizard-panel" id="w0">
+      <h3>먼저 진위 확인 — 국세청 사칭 피싱이 매우 많습니다</h3>
+      <ol>
+        <li><b>문자 속 링크는 절대 누르지 마세요.</b> 국세청은 문자로 앱 설치나 개인정보 입력을 요구하지 않습니다.</li>
+        <li>홈택스(hometax.go.kr)에 <b>직접 주소를 입력해 접속</b> → 로그인 → My홈택스에서 우편물·안내문를 조회하세요. 진짜 안내문이면 여기에 있습니다.</li>
+        <li>전화가 왔다면 끊고 <b>국세상담센터 126</b> 또는 안내문에 적힌 관할 세무서 대표번호로 다시 걸어 확인하세요.</li>
+        <li>"세금 체납으로 계좌가 정지된다", "지금 바로 이체하라"는 식의 압박은 100% 사기입니다.</li>
+      </ol>
+    </div>
+
+    <div class="wizard-panel" id="w1">
+      <h3>종합소득세 신고 안내문 — 고지서가 아닙니다</h3>
+      <p style="font-size:.92rem;">플랫폼 제출 자료를 근거로 "신고 대상인지 확인하라"는 안내이며, 이 단계에서 잘 대응하면 문제가 커지지 않습니다.</p>
+      <ol>
+        <li><b>안내문에 적힌 신고·회신 기한부터 확인</b>하세요.</li>
+        <li>내 거래가 어느 쪽인지 판단: <b>① 자가진단</b>을 해보세요.</li>
+        <li><b>개인 물품 처분이면</b> — 세금 낼 것이 없습니다. ② 판매 대장을 정리하고, 아래 <b>소명서 초안 생성기</b>로 회신을 준비하세요.</li>
+        <li><b>되팔이(리셀) 수익이 있었다면</b> — 기한 내 신고가 최선입니다. 아래 <b>가산세 계산기</b>로 "지금 신고 vs 미룰 때" 차이를 확인하고, ③ 신고 안내의 절차대로 진행하세요.</li>
+        <li>무시하면 소명 기회 없이 직권 결정(경비 인정 없이 과세)으로 넘어갈 수 있습니다.</li>
+      </ol>
+    </div>
+
+    <div class="wizard-panel" id="w2">
+      <h3>해명(소명)자료 제출 요구 — 기한 내 서면 대응이 핵심</h3>
+      <ol>
+        <li><b>제출 기한 확인.</b> 기한 연장이 필요하면 담당자에게 미리 연락해 요청할 수 있습니다.</li>
+        <li>담당 조사관에게 전화해 <b>무엇을 소명하라는 것인지 범위를 정확히</b> 확인하세요 (특정 거래인지, 전체인지).</li>
+        <li>개인 물품 처분 거래는: ② 판매 대장 + 취득 증빙(주문내역·카드내역) + 사용 사실 증빙을 묶어 아래 <b>소명서 초안 생성기</b>로 회신서를 작성하세요.</li>
+        <li>리셀 수익 거래가 섞여 있다면 그 부분은 인정하고 신고 의사를 밝히는 게 유리합니다 — 일부를 숨기다 들통나면 부정행위(가산세 40%)로 번질 수 있습니다. 아래 <b>소명서 초안 생성기</b>에서 "리셀 거래 포함" 옵션을 켜면 인정·신고 의사 문단이 자동으로 들어갑니다.</li>
+        <li>금액이 크거나 판단이 어려우면 이 단계에서 세무사를 선임하세요. 회신서 한 장으로 조사 확대 여부가 갈릴 수 있습니다.</li>
+      </ol>
+    </div>
+
+    <div class="wizard-panel" id="w3">
+      <h3>세무조사 사전통지 — 전문가 없이 혼자 대응하지 마세요</h3>
+      <ol>
+        <li>통지서에서 <b>조사 대상 세목·기간·사유</b>를 확인하세요.</li>
+        <li>이 단계는 <b>세무사(또는 세무대리인) 선임을 강력히 권합니다.</b> 조사 입회·의견 진술을 대리할 수 있습니다.</li>
+        <li>사업·질병 등 사유가 있으면 <b>조사 연기 신청</b>이 가능합니다.</li>
+        <li>조사 과정이 부당하다고 느끼면 관할 세무서 <b>납세자보호담당관</b>에게 권리보호를 요청할 수 있습니다.</li>
+        <li>조사 착수 전이라도 스스로 누락분을 수정신고하면 가산세 부담이 줄어들 수 있습니다 — 세무사와 상의해 결정하세요.</li>
+      </ol>
+    </div>
+
+    <div class="wizard-panel" id="w4">
+      <h3>이미 고지서가 나왔다면 — 90일 안에 다퉈야 합니다</h3>
+      <ol>
+        <li>고지 내용이 맞다면: 납부하거나, 일시 납부가 어려우면 <b>납부 기한 연장·분납</b>을 세무서에 신청하세요.</li>
+        <li>고지가 부당하다면: 고지서를 받은 날부터 <b>90일 이내</b>에 이의신청 또는 조세심판원 심판청구를 제기할 수 있습니다 <span class="law">(국세기본법 §61·§68)</span>. 90일이 지나면 각하되어 다툴 기회 자체가 사라집니다.</li>
+        <li>불복은 "몰랐다"는 주장만으론 어렵고, 사업성이 없다는 <b>구체적 증빙</b>(② 판매 대장 자료)이 있어야 승산이 있습니다.</li>
+        <li>고지 세액이 크면 불복 전문 세무사·세무법인과 상담하세요. 심판청구는 무료이지만 대리인 조력 여부로 결과가 크게 갈립니다.</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>가산세 계산기 — 지금 신고 vs 미루면 얼마나 차이날까</h2>
+    <p style="font-size:.9rem;color:var(--muted);margin-bottom:12px;">
+      사업자등록 없이 판매한 경우의 <b>부가가치세 예상 부담</b>을 추정합니다. 모든 계산은 브라우저 안에서만 이뤄집니다.
+      (종합소득세는 경비·공제에 따라 편차가 커서 여기서 추정하지 않습니다)
+    </p>
+    <form class="ledger" id="calcForm">
+      <div class="field"><label>기간 내 총 매출액 (원)</label><input type="number" id="c-sales" min="0" required></div>
+      <div class="field"><label>증빙 있는 매입액 (원, 없으면 0)</label><input type="number" id="c-purch" min="0" value="0"></div>
+      <div class="field"><label>원래 신고기한</label><input type="date" id="c-due" required></div>
+      <div class="field"><label>매입세액 공제 가능 여부</label>
+        <select id="c-deduct">
+          <option value="n">불가 — 등록 전 매입 (대부분)</option>
+          <option value="y">가능 — 증빙 보유·20일 예외</option>
+        </select>
+      </div>
+      <div class="field full"><button type="submit" class="primary">계산하기</button></div>
+    </form>
+    <div id="calcResult" style="margin-top:14px;"></div>
+    <div class="warn" style="margin-top:12px;">
+      참고용 추정입니다. 일반과세자 기준 단순 계산이며 실제 세액은 과세 방식(간이/일반)·경정 시점·감면 적용에 따라 달라집니다.
+      요율 근거: 미등록가산세 1% <span class="law">(부가세법 §60)</span>, 무신고가산세 20% <span class="law">(국세기본법 §47의2)</span>,
+      납부지연 1일 0.022% <span class="law">(국세기본법 §47의4)</span>, 기한후신고 감면 <span class="law">(국세기본법 §48②)</span>.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>소명서 초안 생성기</h2>
+    <p style="font-size:.9rem;color:var(--muted);margin-bottom:12px;">
+      ② 판매 대장의 <b>중고거래(개인 물품 처분) 내역</b>으로 해명자료 회신서 초안을 만듭니다.
+      대장에 <b>리셀</b> 거래가 있으면, 그 부분을 숨기지 않고 <b>인정하며 신고 의사를 밝히는 문단</b>을 함께 넣을 수 있습니다
+      — 일부를 숨기다 적발되면 부정행위(가산세 40%)로 번질 수 있어, 인정할 것은 인정하는 쪽이 유리합니다.
+      생성 후 본인 상황에 맞게 반드시 수정하세요.
+    </p>
+    <form class="ledger" id="letterForm">
+      <div class="field"><label>성명</label><input type="text" id="l-name" placeholder="홍길동"></div>
+      <div class="field"><label>연락처 (선택)</label><input type="text" id="l-phone" placeholder="010-0000-0000"></div>
+      <div class="field full"><label>안내문 문서번호·관할 세무서 (선택)</label><input type="text" id="l-doc" placeholder="예: ○○세무서 소득세과, 문서번호 ○○○"></div>
+      <div class="field full" style="flex-direction:row;align-items:center;gap:8px;">
+        <input type="checkbox" id="l-includeResell" checked style="width:auto;">
+        <label for="l-includeResell" style="margin:0;font-size:.9rem;color:var(--ink);">대장의 리셀 거래를 소명서에 포함 (인정 + 신고 의사 표명)</label>
+      </div>
+      <div class="field"><label>신고 예정일 (선택, 리셀 포함 시)</label><input type="date" id="l-planDate"></div>
+      <div class="field full"><button type="submit" class="primary">초안 생성</button></div>
+    </form>
+    <div id="letterWrap" style="display:none;margin-top:14px;">
+      <p class="note" id="letterNote" style="display:none;"></p>
+      <textarea class="letter" id="letterText"></textarea>
+      <div class="toolbar">
+        <button class="ghost" id="letterCopy">복사</button>
+        <button class="ghost" id="letterSave">.txt로 저장</button>
+      </div>
+    </div>
+    <div class="warn" style="margin-top:12px;">
+      이 초안은 일반 양식 제공이며 세무 대리·법률 자문이 아닙니다. 사실과 다른 내용을 적으면 오히려 불리해집니다 —
+      실제 거래 내용과 일치하는지 확인하고, 금액이 크거나 판단이 어려우면 제출 전 세무사 검토를 받으세요.
+    </div>
+  </div>
+
+</section>
+
+</div>
+
+<footer>
+  <div class="wrap" style="padding-bottom:0;">
+    본 서비스는 일반적인 세금 정보 제공을 목적으로 하며, 세무 대리나 개별 세무 상담이 아닙니다.
+    진단 결과는 참고용이며 실제 과세 여부는 국세청이 거래의 형태와 성격을 종합적으로 판단합니다.
+    개별 사안은 국세상담센터(126) 또는 세무사와 상담하세요.
+    입력한 모든 데이터는 사용자의 브라우저에만 저장되며 외부로 전송되지 않습니다.
+  </div>
+</footer>
+
+<script>
+// ---------- 탭 ----------
+document.querySelectorAll('nav button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('section.tab').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ---------- ① 자가진단 ----------
+document.getElementById('diagBtn').addEventListener('click', () => {
+  const names = ['q1','q2','q3','q4','q5','q6'];
+  let score = 0, answered = 0;
+  names.forEach(n => {
+    const sel = document.querySelector('input[name="' + n + '"]:checked');
+    if (sel) { score += Number(sel.value); answered++; }
+  });
+  const box = document.getElementById('diagResult');
+  if (answered < names.length) {
+    box.style.display = 'block';
+    box.innerHTML = '<p>모든 질문에 답해주세요. (' + answered + '/' + names.length + ')</p>';
+    return;
+  }
+  let html = '';
+  if (score <= 2) {
+    html = '<span class="badge g">개인 물품 처분에 가까움</span>' +
+      '<p>일상적인 중고거래로 보이며, 이 경우 원칙적으로 과세 대상이 아닙니다. ' +
+      '다만 만약을 대비해 아래 <b>소명자료 체크리스트</b>와 <b>② 판매 대장</b>을 준비해두면 ' +
+      '국세청 안내문을 받더라도 어렵지 않게 소명할 수 있습니다.</p>';
+  } else if (score <= 6) {
+    html = '<span class="badge a">일부 거래는 소명 준비 필요</span>' +
+      '<p>대체로 개인 거래로 보이지만, 일부 거래(새 상품 판매, 산 값보다 비싸게 판 경우 등)는 ' +
+      '세무서가 물어볼 수 있습니다. 해당 거래별로 실제 사유(사이즈 미스, 선물 중복 등)를 메모해두고, ' +
+      '<b>② 판매 대장</b>에서 전체 내역을 정리해두세요. 이런 거래가 반복적이라면 ③ 신고 안내도 확인하세요.</p>';
+  } else {
+    html = '<span class="badge r">사업성으로 판단될 가능성 높음</span>' +
+      '<p>되팔 목적의 반복 거래로 판단될 가능성이 높습니다. 이 경우 사업자등록 여부와 관계없이 ' +
+      '종합소득세·부가가치세 신고 대상이 될 수 있으며, <b>안내문을 받기 전에 자진 신고하는 것이 가산세를 크게 줄입니다</b>. ' +
+      '<b>③ 신고 안내</b> 탭을 확인하고, 매출 규모가 크면 세무사 상담을 받으세요.</p>';
+  }
+  html += '<p style="font-size:.82rem;color:var(--muted);margin-top:8px;">※ 참고용 진단입니다. 실제 판단은 거래의 형태·규모·의도를 종합해 국세청이 결정하며, 정해진 횟수·금액 기준은 없습니다.</p>';
+  box.style.display = 'block';
+  box.innerHTML = html;
+});
+
+// ---------- ② 판매 대장 ----------
+const LS_KEY = 'ledger-rows-v1';
+let rows = [];
+try { rows = JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch (e) { rows = []; }
+
+const fmt = n => (n === null || n === '' || isNaN(n)) ? '-' : Number(n).toLocaleString('ko-KR');
+
+function holdDays(buy, sell) {
+  if (!buy || !sell) return null;
+  const d = (new Date(sell) - new Date(buy)) / 86400000;
+  return isNaN(d) ? null : Math.round(d);
+}
+function holdLabel(days) {
+  if (days === null) return '-';
+  if (days < 0) return '?';
+  if (days < 30) return days + '일';
+  if (days < 365) return Math.round(days / 30) + '개월';
+  return (days / 365).toFixed(1) + '년';
+}
+
+function rowType(r) { return r.type === '리셀' ? '리셀' : '중고거래'; }
+
+function isFlagged(r) {
+  if (rowType(r) === '리셀') return true;
+  const profit = (r.buyPrice !== '' && r.buyPrice !== null) ? r.sellPrice - r.buyPrice : null;
+  const days = holdDays(r.buyDate, r.sellDate);
+  return (profit !== null && profit > 0) || (days !== null && days >= 0 && days < 30);
+}
+
+function render() {
+  const tbody = document.querySelector('#ledgerTable tbody');
+  tbody.innerHTML = '';
+  let totalSell = 0, totalProfit = 0, hasProfitData = false, flagCount = 0;
+  let usedCount = 0, resellCount = 0, resellProfit = 0, resellHasProfit = false;
+
+  rows.forEach((r, i) => {
+    const profit = (r.buyPrice !== '' && r.buyPrice !== null) ? r.sellPrice - r.buyPrice : null;
+    const days = holdDays(r.buyDate, r.sellDate);
+    const flagged = isFlagged(r);
+    if (flagged) flagCount++;
+    totalSell += Number(r.sellPrice) || 0;
+    if (profit !== null) { totalProfit += profit; hasProfitData = true; }
+    if (rowType(r) === '리셀') {
+      resellCount++;
+      if (profit !== null) { resellProfit += profit; resellHasProfit = true; }
+    } else {
+      usedCount++;
+    }
+
+    const tr = document.createElement('tr');
+    if (flagged) tr.className = 'flag';
+    const tag = rowType(r) === '리셀'
+      ? '<span class="tag resell">리셀</span>'
+      : '<span class="tag used">중고</span>';
+    tr.innerHTML =
+      '<td>' + tag + '</td>' +
+      '<td>' + escHtml(r.sellDate) + '</td>' +
+      '<td>' + escHtml(r.platform) + '</td>' +
+      '<td>' + escHtml(r.item) + '</td>' +
+      '<td class="num">' + fmt(r.sellPrice) + '</td>' +
+      '<td>' + escHtml(r.buyDate || '-') + '</td>' +
+      '<td class="num">' + fmt(r.buyPrice) + '</td>' +
+      '<td class="num">' + (profit === null ? '-' : fmt(profit)) + '</td>' +
+      '<td>' + holdLabel(days) + '</td>' +
+      '<td>' + escHtml(r.reason || '') + '</td>' +
+      '<td><button class="edit" data-i="' + i + '">수정</button><button class="del" data-i="' + i + '">삭제</button></td>';
+    tbody.appendChild(tr);
+  });
+
+  tbody.querySelectorAll('.del').forEach(b => b.addEventListener('click', () => {
+    rows.splice(Number(b.dataset.i), 1); save(); render();
+  }));
+
+  // 수정: 행 내용을 입력 폼에 되불러오고 행은 제거 (수정 후 다시 "행 추가")
+  tbody.querySelectorAll('.edit').forEach(b => b.addEventListener('click', () => {
+    const r = rows[Number(b.dataset.i)];
+    document.getElementById('f-type').value = rowType(r);
+    document.getElementById('f-sellDate').value = r.sellDate || '';
+    document.getElementById('f-platform').value = r.platform || '기타';
+    document.getElementById('f-item').value = r.item || '';
+    document.getElementById('f-sellPrice').value = r.sellPrice || '';
+    document.getElementById('f-buyDate').value = r.buyDate || '';
+    document.getElementById('f-buyPrice').value = (r.buyPrice === null || r.buyPrice === undefined) ? '' : r.buyPrice;
+    document.getElementById('f-reason').value = r.reason || '';
+    rows.splice(Number(b.dataset.i), 1); save(); render();
+    document.getElementById('ledgerForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }));
+
+  const stats = document.getElementById('ledgerStats');
+  stats.innerHTML =
+    '<div class="stat"><div class="v">' + usedCount + '건 / ' + resellCount + '건</div><div class="k">중고거래 / 리셀</div></div>' +
+    '<div class="stat"><div class="v">' + fmt(totalSell) + '원</div><div class="k">총 판매액</div></div>' +
+    '<div class="stat"><div class="v">' + (hasProfitData ? fmt(totalProfit) + '원' : '-') + '</div><div class="k">총 손익 (구매가 입력분)</div></div>' +
+    (resellCount > 0
+      ? '<div class="stat"><div class="v">' + (resellHasProfit ? fmt(resellProfit) + '원' : '-') + '</div><div class="k">리셀 손익 합계</div></div>'
+      : '');
+
+  const flagNote = document.getElementById('flagNote');
+  if (flagCount > 0) {
+    flagNote.style.display = 'block';
+    let msg = '주황색으로 표시된 <b>' + flagCount + '건</b>은 리셀이거나, 이익이 났거나, 보유기간이 30일 미만인 거래입니다. ' +
+      '세무서가 물어볼 수 있으니 판매 사유를 구체적으로 적어두세요.';
+    if (resellCount > 0) {
+      msg += ' 리셀 거래가 계속·반복되면 사업소득으로 신고 대상이 될 수 있습니다 — <b>③ 신고 안내</b>를 확인하세요.';
+    }
+    flagNote.innerHTML = msg;
+  } else {
+    flagNote.style.display = 'none';
+  }
+}
+
+function save() {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(rows));
+    localStorage.setItem(LS_UPDATED, String(Date.now()));
+  } catch (e) {}
+  pushRemote();
+  pushCloud_();
+}
+
+// ---------- 기기 간 동기화 (구글 Apps Script 웹앱으로 서비스될 때만 동작) ----------
+const REMOTE = typeof google !== 'undefined' && google.script && google.script.run;
+let pushTimer = null, syncDirty = false;
+
+function setSync(msg, cls) {
+  const bar = document.getElementById('syncBar');
+  bar.style.display = 'block';
+  bar.textContent = msg;
+  bar.className = 'sync' + (cls ? ' ' + cls : '');
+}
+
+function pushRemote() {
+  if (!REMOTE) return;
+  syncDirty = true;
+  clearTimeout(pushTimer);
+  setSync('저장 대기 중…');
+  pushTimer = setTimeout(() => {
+    setSync('구글 시트에 저장 중…');
+    google.script.run
+      .withSuccessHandler(() => { syncDirty = false; setSync('✓ 구글 시트에 저장됨', 'ok'); })
+      .withFailureHandler(() => setSync('저장 실패 — 인터넷 연결을 확인하세요. 내용을 다시 수정하면 재시도합니다.', 'err'))
+      .saveRows(JSON.stringify(rows));
+  }, 1200);
+}
+
+window.addEventListener('beforeunload', e => {
+  if (syncDirty) { e.preventDefault(); e.returnValue = ''; }
+});
+
+// ---------- 클라우드 동기화 + 종단간 암호화 (Firebase 설정이 있을 때만 켜짐) ----------
+// 배포 시 아래를 Firebase 콘솔에서 받은 설정 객체로 교체하면 동기화 기능이 활성화됩니다.
+// (이 값들은 비밀이 아니라 공개 가능한 식별자입니다 — 보안은 Firestore 규칙과 종단간 암호화가 담당)
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBGOqGHNflf54YJwtuckZGqoLmPEKN250A",
+  authDomain: "tax-helper-9112a.firebaseapp.com",
+  projectId: "tax-helper-9112a",
+  storageBucket: "tax-helper-9112a.firebasestorage.app",
+  messagingSenderId: "1000747261394",
+  appId: "1:1000747261394:web:286a375c541fd2af4e3c0b"
+};
+const LS_UPDATED = 'ledger-updated-v1';
+const PBKDF2_ITER = 310000;
+const CLOUD_ENABLED = !REMOTE && (FIREBASE_CONFIG !== null || typeof window.__CLOUD_STUB !== 'undefined');
+
+const enc_ = new TextEncoder(), dec_ = new TextDecoder();
+const b64_ = {
+  enc: buf => {
+    const u = new Uint8Array(buf);
+    let s = '';
+    for (let i = 0; i < u.length; i += 8192) s += String.fromCharCode.apply(null, u.subarray(i, i + 8192));
+    return btoa(s);
+  },
+  dec: s => Uint8Array.from(atob(s), c => c.charCodeAt(0))
+};
+
+// --- 암호화 기본 도구 (브라우저 내장 WebCrypto 사용) ---
+async function kek_(secret, salt) {
+  const km = await crypto.subtle.importKey('raw', enc_.encode(secret), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: PBKDF2_ITER, hash: 'SHA-256' },
+    km, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+async function aesEnc_(key, bytes) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, bytes);
+  return { iv: b64_.enc(iv), ct: b64_.enc(ct) };
+}
+async function aesDec_(key, ivB64, ctB64) {
+  return crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64_.dec(ivB64) }, key, b64_.dec(ctB64));
+}
+// 마스터 키(실제 데이터 암호화 키)를 비밀번호·복구 코드에서 유도한 키로 각각 감싸 저장한다.
+// 비밀번호를 바꿔도 데이터 재암호화 없이 감싼 것만 다시 만들면 된다.
+async function makeWrap_(secret, masterBytes) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const kek = await kek_(secret, salt);
+  const w = await aesEnc_(kek, masterBytes);
+  return { salt: b64_.enc(salt), iv: w.iv, ct: w.ct };
+}
+async function openWrap_(secret, wrap) {
+  const kek = await kek_(secret, b64_.dec(wrap.salt));
+  return new Uint8Array(await aesDec_(kek, wrap.iv, wrap.ct));
+}
+function newRecoveryCode_() {
+  const A = 'ABCDEFGHJKMNPQRSTVWXYZ0123456789'; // 헷갈리는 글자(I·L·O·U) 제외, 32자
+  const r = crypto.getRandomValues(new Uint8Array(20));
+  let s = '';
+  for (let i = 0; i < 20; i++) { s += A[r[i] % 32]; if (i % 4 === 3 && i < 19) s += '-'; }
+  return s;
+}
+function normSecret_(s) { return String(s).toUpperCase().replace(/[^A-Z0-9]/g, ''); }
+
+// --- 클라우드 백엔드 (Firebase, 테스트 시 스텁으로 대체 가능) ---
+let cloud_ = null, cloudUser_ = null, cloudDoc_ = null, masterRaw_ = null, cloudTimer_ = null;
+
+function masterKey_() { return crypto.subtle.importKey('raw', masterRaw_, 'AES-GCM', false, ['encrypt', 'decrypt']); }
+function masterCacheKey_() { return 'e2e-master-' + cloudUser_.uid; }
+
+async function cloudBackend_() {
+  if (typeof window.__CLOUD_STUB !== 'undefined') return window.__CLOUD_STUB;
+  const base = 'https://www.gstatic.com/firebasejs/10.14.1/';
+  await loadScript(base + 'firebase-app-compat.js');
+  await Promise.all([loadScript(base + 'firebase-auth-compat.js'), loadScript(base + 'firebase-firestore-compat.js')]);
+  firebase.initializeApp(FIREBASE_CONFIG);
+  const auth = firebase.auth(), db = firebase.firestore();
+  return {
+    onAuth: cb => auth.onAuthStateChanged(u => cb(u ? { uid: u.uid, email: u.email } : null)),
+    signIn: () => {
+      const p = new firebase.auth.GoogleAuthProvider();
+      return auth.signInWithPopup(p).catch(() => auth.signInWithRedirect(p)); // 모바일에서 팝업이 막히면 리디렉션
+    },
+    signOut: () => auth.signOut(),
+    load: uid => db.collection('users').doc(uid).get().then(s => (s.exists ? s.data() : null)),
+    save: (uid, doc) => db.collection('users').doc(uid).set(doc)
+  };
+}
+
+// --- 저장(암호화 후 업로드, 1.2초 디바운스) ---
+function pushCloud_() {
+  if (!CLOUD_ENABLED || !cloudUser_ || !masterRaw_) return;
+  syncDirty = true;
+  clearTimeout(cloudTimer_);
+  setSync('저장 대기 중…');
+  cloudTimer_ = setTimeout(async () => {
+    try {
+      setSync('암호화하여 저장 중…');
+      const mk = await masterKey_();
+      const p = await aesEnc_(mk, enc_.encode(JSON.stringify(rows)));
+      const ts = Date.now();
+      const doc = { meta: cloudDoc_.meta, data: { iv: p.iv, ct: p.ct, updatedAt: ts, count: rows.length } };
+      await cloud_.save(cloudUser_.uid, doc);
+      cloudDoc_ = doc;
+      try { localStorage.setItem(LS_UPDATED, String(ts)); } catch (e) {}
+      syncDirty = false;
+      setSync('✓ 암호화 저장됨 ' + new Date(ts).toLocaleTimeString('ko-KR'), 'ok');
+    } catch (e) {
+      setSync('저장 실패 — 인터넷 연결을 확인하세요. 내용을 다시 수정하면 재시도합니다.', 'err');
+    }
+  }, 1200);
+}
+
+// --- 잠금 해제 후: 서버·이 기기 중 더 최신 데이터로 맞춘다 ---
+async function afterUnlock_() {
+  try {
+    let serverRows = null, serverTs = 0;
+    if (cloudDoc_ && cloudDoc_.data) {
+      const mk = await masterKey_();
+      serverRows = JSON.parse(dec_.decode(await aesDec_(mk, cloudDoc_.data.iv, cloudDoc_.data.ct)));
+      serverTs = cloudDoc_.data.updatedAt || 0;
+    }
+    try { localStorage.setItem(masterCacheKey_(), b64_.enc(masterRaw_)); } catch (e) {}
+    const localTs = Number(localStorage.getItem(LS_UPDATED)) || 0;
+    renderSyncUnlocked_();
+    if (serverRows !== null && serverTs >= localTs) {
+      rows = serverRows;
+      try {
+        localStorage.setItem(LS_KEY, JSON.stringify(rows));
+        localStorage.setItem(LS_UPDATED, String(serverTs));
+      } catch (e) {}
+      render();
+      setSync('✓ 클라우드와 연결됨 — PC·폰 어디서나 같은 데이터를 봅니다', 'ok');
+    } else {
+      pushCloud_(); // 이 기기 쪽이 더 최신이거나 서버가 비어 있음 → 올린다
+    }
+    return true;
+  } catch (e) {
+    masterRaw_ = null;
+    try { localStorage.removeItem(masterCacheKey_()); } catch (e2) {}
+    return false;
+  }
+}
+
+// --- 동기화 UI ---
+function syncHtml_(html) { document.getElementById('syncUI').innerHTML = html; }
+
+function renderSyncSignedOut_() {
+  syncHtml_(
+    '<div class="sync-row"><button type="button" class="primary" data-act="signin">구글 계정으로 로그인</button></div>' +
+    '<p class="sync-note">로그인하지 않아도 앱은 그대로 쓸 수 있습니다 (데이터는 이 기기에만 저장).</p>'
+  );
+}
+function renderSyncSetup_() {
+  syncHtml_(
+    '<p style="font-size:.9rem;"><b>동기화 비밀번호</b>를 정해주세요. 데이터를 암호화하는 열쇠이며, 구글 비밀번호와 별개입니다.</p>' +
+    '<div class="sync-row">' +
+    '<input type="password" id="s-pw1" class="sync-in" placeholder="동기화 비밀번호 (8자 이상)">' +
+    '<input type="password" id="s-pw2" class="sync-in" placeholder="비밀번호 다시 입력">' +
+    '<button type="button" class="primary" data-act="setup">동기화 시작</button></div>' +
+    '<p class="sync-note">다음 단계에서 <b>복구 코드</b>가 발급됩니다. 비밀번호를 잊어도 복구 코드로 잠금을 풀 수 있습니다.</p>' +
+    '<div class="sync-row"><button type="button" class="ghost" data-act="signout">로그아웃</button></div>' +
+    '<p id="s-msg" class="sync-note"></p>'
+  );
+}
+function renderSyncRecoveryShow_(code, isNew) {
+  syncHtml_(
+    '<p style="font-size:.92rem;"><b>' + (isNew ? '새 복구 코드가 발급되었습니다' : '복구 코드가 발급되었습니다') + '.</b> ' +
+    '비밀번호를 잊었을 때 이 코드로만 잠금을 풀 수 있습니다. 지금 저장해두세요.</p>' +
+    '<div class="sync-code">' + code + '</div>' +
+    '<div class="sync-row">' +
+    '<button type="button" class="ghost" data-act="dlcode" data-code="' + code + '">.txt 파일로 저장</button>' +
+    '<button type="button" class="primary" data-act="codeok">저장했어요, 계속하기</button></div>' +
+    '<p class="sync-note">비밀번호와 복구 코드를 모두 잃으면 클라우드 데이터는 누구도 풀 수 없습니다 (기기에 남은 데이터와 CSV 백업으로만 복구 가능).</p>'
+  );
+}
+function renderSyncLocked_(msg) {
+  syncHtml_(
+    '<p style="font-size:.9rem;">' + (msg || '이 기기에서 처음 사용합니다. <b>동기화 비밀번호</b>를 입력해 잠금을 풀어주세요.') + '</p>' +
+    '<div class="sync-row">' +
+    '<input type="password" id="s-pw" class="sync-in" placeholder="동기화 비밀번호">' +
+    '<button type="button" class="primary" data-act="unlock">잠금 해제</button></div>' +
+    '<div class="sync-row"><button type="button" class="ghost" data-act="torecover">비밀번호를 잊었어요 (복구 코드 사용)</button>' +
+    '<button type="button" class="ghost" data-act="signout">로그아웃</button></div>' +
+    '<p id="s-msg" class="sync-note"></p>'
+  );
+}
+function renderSyncRecover_() {
+  syncHtml_(
+    '<p style="font-size:.9rem;"><b>복구 코드</b>와 <b>새 비밀번호</b>를 입력하세요.</p>' +
+    '<div class="sync-row"><input type="text" id="s-rc" class="sync-in" style="min-width:280px;" placeholder="복구 코드 (XXXX-XXXX-…)"></div>' +
+    '<div class="sync-row">' +
+    '<input type="password" id="s-pw1" class="sync-in" placeholder="새 비밀번호 (8자 이상)">' +
+    '<input type="password" id="s-pw2" class="sync-in" placeholder="새 비밀번호 다시 입력">' +
+    '<button type="button" class="primary" data-act="recover">복구하고 새 비밀번호 설정</button></div>' +
+    '<div class="sync-row"><button type="button" class="ghost" data-act="tolock">돌아가기</button></div>' +
+    '<p id="s-msg" class="sync-note"></p>'
+  );
+}
+function renderSyncUnlocked_() {
+  syncHtml_(
+    '<p class="sync-note">로그인: ' + escHtml(cloudUser_.email || '') + ' · 종단간 암호화 사용 중</p>' +
+    '<div class="sync-row">' +
+    '<button type="button" class="ghost" data-act="pushnow">지금 동기화</button>' +
+    '<button type="button" class="ghost" data-act="tochangepw">비밀번호 변경</button>' +
+    '<button type="button" class="ghost" data-act="newcode">새 복구 코드 발급</button>' +
+    '<button type="button" class="ghost" data-act="lockout">로그아웃</button></div>' +
+    '<div id="s-extra"></div><p id="s-msg" class="sync-note"></p>'
+  );
+}
+function sMsg_(t) { const el = document.getElementById('s-msg'); if (el) el.textContent = t; }
+
+document.getElementById('syncUI').addEventListener('click', async e => {
+  const act = e.target.dataset && e.target.dataset.act;
+  if (!act) return;
+  const val = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+
+  if (act === 'signin') { cloud_.signIn(); return; }
+  if (act === 'signout' || act === 'lockout') {
+    if (act === 'lockout') { try { localStorage.removeItem(masterCacheKey_()); } catch (e2) {} }
+    masterRaw_ = null;
+    await cloud_.signOut();
+    setSync('로그아웃했습니다 — 데이터는 이 기기와 클라우드(암호화)에 남아 있습니다.');
+    return;
+  }
+  if (act === 'setup') {
+    const p1 = val('s-pw1'), p2 = val('s-pw2');
+    if (p1.length < 8) { sMsg_('비밀번호는 8자 이상으로 정해주세요.'); return; }
+    if (p1 !== p2) { sMsg_('두 비밀번호가 서로 다릅니다.'); return; }
+    sMsg_('암호 키 생성 중… (몇 초 걸릴 수 있습니다)');
+    masterRaw_ = crypto.getRandomValues(new Uint8Array(32));
+    const code = newRecoveryCode_();
+    const meta = { iter: PBKDF2_ITER, pw: await makeWrap_(p1, masterRaw_), rc: await makeWrap_(normSecret_(code), masterRaw_) };
+    cloudDoc_ = { meta: meta, data: null };
+    renderSyncRecoveryShow_(code, false);
+    return;
+  }
+  if (act === 'dlcode') {
+    const blob = new Blob(['중고거래 세금 도우미 — 동기화 복구 코드\r\n\r\n' + e.target.dataset.code +
+      '\r\n\r\n비밀번호를 잊었을 때 이 코드로 잠금을 풀 수 있습니다. 안전한 곳에 보관하세요.'], { type: 'text/plain;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = '동기화_복구코드.txt';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    return;
+  }
+  if (act === 'codeok') { await afterUnlock_(); return; }
+  if (act === 'unlock') {
+    sMsg_('확인 중…');
+    try { masterRaw_ = await openWrap_(val('s-pw'), cloudDoc_.meta.pw); }
+    catch (err) { sMsg_('비밀번호가 맞지 않습니다.'); return; }
+    if (!await afterUnlock_()) renderSyncLocked_('데이터를 여는 데 실패했습니다 — 다시 시도해주세요.');
+    return;
+  }
+  if (act === 'torecover') { renderSyncRecover_(); return; }
+  if (act === 'tolock') { renderSyncLocked_(); return; }
+  if (act === 'recover') {
+    const p1 = val('s-pw1'), p2 = val('s-pw2');
+    if (p1.length < 8) { sMsg_('새 비밀번호는 8자 이상으로 정해주세요.'); return; }
+    if (p1 !== p2) { sMsg_('두 비밀번호가 서로 다릅니다.'); return; }
+    sMsg_('복구 코드 확인 중…');
+    try { masterRaw_ = await openWrap_(normSecret_(val('s-rc')), cloudDoc_.meta.rc); }
+    catch (err) { sMsg_('복구 코드가 맞지 않습니다.'); return; }
+    cloudDoc_.meta.pw = await makeWrap_(p1, masterRaw_);
+    await cloud_.save(cloudUser_.uid, cloudDoc_);
+    if (await afterUnlock_()) setSync('✓ 복구 완료 — 새 비밀번호가 설정되었습니다.', 'ok');
+    return;
+  }
+  if (act === 'pushnow') { pushCloud_(); return; }
+  if (act === 'tochangepw') {
+    document.getElementById('s-extra').innerHTML =
+      '<div class="sync-row">' +
+      '<input type="password" id="s-pw1" class="sync-in" placeholder="새 비밀번호 (8자 이상)">' +
+      '<input type="password" id="s-pw2" class="sync-in" placeholder="새 비밀번호 다시 입력">' +
+      '<button type="button" class="primary" data-act="changepw">변경</button></div>';
+    return;
+  }
+  if (act === 'changepw') {
+    const p1 = val('s-pw1'), p2 = val('s-pw2');
+    if (p1.length < 8) { sMsg_('새 비밀번호는 8자 이상으로 정해주세요.'); return; }
+    if (p1 !== p2) { sMsg_('두 비밀번호가 서로 다릅니다.'); return; }
+    cloudDoc_.meta.pw = await makeWrap_(p1, masterRaw_);
+    await cloud_.save(cloudUser_.uid, cloudDoc_);
+    document.getElementById('s-extra').innerHTML = '';
+    sMsg_('비밀번호를 변경했습니다. 다른 기기에서는 새 비밀번호로 잠금을 풀면 됩니다.');
+    return;
+  }
+  if (act === 'newcode') {
+    const code = newRecoveryCode_();
+    cloudDoc_.meta.rc = await makeWrap_(normSecret_(code), masterRaw_);
+    await cloud_.save(cloudUser_.uid, cloudDoc_);
+    renderSyncRecoveryShow_(code, true);
+    return;
+  }
+});
+
+async function cloudInit_() {
+  if (!CLOUD_ENABLED) return;
+  document.getElementById('syncCard').style.display = 'block';
+  syncHtml_('<p class="sync-note">동기화 모듈 준비 중…</p>');
+  try { cloud_ = await cloudBackend_(); }
+  catch (e) { syncHtml_('<p class="sync-note">동기화 모듈을 불러오지 못했습니다 — 인터넷 연결을 확인하고 새로고침 해주세요.</p>'); return; }
+  cloud_.onAuth(async u => {
+    cloudUser_ = u; masterRaw_ = null; cloudDoc_ = null;
+    if (!u) { renderSyncSignedOut_(); return; }
+    syncHtml_('<p class="sync-note">데이터 확인 중…</p>');
+    try { cloudDoc_ = await cloud_.load(u.uid); }
+    catch (e) { syncHtml_('<p class="sync-note">서버에 연결하지 못했습니다 — 새로고침 해주세요.</p>'); return; }
+    if (!cloudDoc_ || !cloudDoc_.meta) { renderSyncSetup_(); return; }
+    let cached = null;
+    try { cached = localStorage.getItem(masterCacheKey_()); } catch (e) {}
+    if (cached) {
+      masterRaw_ = b64_.dec(cached);
+      if (await afterUnlock_()) return;
+      renderSyncLocked_('저장된 열쇠로 풀지 못했습니다 — 비밀번호를 입력해주세요.');
+    } else {
+      renderSyncLocked_();
+    }
+  });
+}
+
+document.getElementById('ledgerForm').addEventListener('submit', e => {
+  e.preventDefault();
+  rows.push({
+    type: document.getElementById('f-type').value,
+    sellDate: document.getElementById('f-sellDate').value,
+    platform: document.getElementById('f-platform').value,
+    item: document.getElementById('f-item').value,
+    sellPrice: Number(document.getElementById('f-sellPrice').value),
+    buyDate: document.getElementById('f-buyDate').value,
+    buyPrice: document.getElementById('f-buyPrice').value === '' ? null : Number(document.getElementById('f-buyPrice').value),
+    reason: document.getElementById('f-reason').value
+  });
+  save(); render();
+  e.target.reset();
+});
+
+document.getElementById('csvBtn').addEventListener('click', () => {
+  if (rows.length === 0) { alert('내역이 없습니다.'); return; }
+  const esc = v => {
+    let s = String(v ?? '');
+    // 엑셀 수식 주입(CSV injection) 방지: 수식으로 해석될 수 있는 텍스트는 ' 접두
+    if (/^[=+@\t\r]/.test(s) || (/^-/.test(s) && !/^-?\d+(\.\d+)?$/.test(s))) s = "'" + s;
+    return '"' + s.replace(/"/g, '""') + '"';
+  };
+  const header = ['구분','판매일','플랫폼','품목','판매가','구매일','구매가','손익','보유기간','판매사유'];
+  const lines = [header.map(esc).join(',')];
+  rows.forEach(r => {
+    const profit = (r.buyPrice !== null && r.buyPrice !== '') ? r.sellPrice - r.buyPrice : '';
+    lines.push([rowType(r), r.sellDate, r.platform, r.item, r.sellPrice, r.buyDate, r.buyPrice ?? '', profit,
+      holdLabel(holdDays(r.buyDate, r.sellDate)), r.reason].map(esc).join(','));
+  });
+  // BOM 포함: 엑셀에서 한글이 깨지지 않도록
+  const blob = new Blob(['\uFEFF' + '' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '판매대장.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+document.getElementById('clearBtn').addEventListener('click', () => {
+  if (rows.length && confirm('모든 내역을 삭제할까요? 되돌릴 수 없습니다.')) {
+    rows = []; save(); render();
+  }
+});
+
+// ---------- 영수증 사진 OCR (브라우저 내 처리, 외부 전송 없음) ----------
+// 버전 고정: 공급망 변조·예기치 않은 변경 방지 (업데이트는 의도적으로만)
+const TESS_SRC = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+let tessWorkerPromise = null;
+
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = res; s.onerror = () => rej(new Error('인식 엔진을 내려받지 못했습니다'));
+    document.head.appendChild(s);
+  });
+}
+
+async function getWorker() {
+  if (!tessWorkerPromise) {
+    tessWorkerPromise = (async () => {
+      if (typeof Tesseract === 'undefined') await loadScript(TESS_SRC);
+      return Tesseract.createWorker('kor+eng');
+    })();
+  }
+  return tessWorkerPromise;
+}
+
+function parseReceipt(text) {
+  const out = { date: null, amount: null };
+  const dm = text.match(/(20\d{2})\s*[.\-\/년]\s*(\d{1,2})\s*[.\-\/월]\s*(\d{1,2})/);
+  if (dm) out.date = dm[1] + '-' + dm[2].padStart(2, '0') + '-' + dm[3].padStart(2, '0');
+  const kw = /(합\s*계|총\s*액|총\s*금\s*액|결제\s*금액|승인\s*금액|받을\s*금액|판매\s*금액|거래\s*금액)/;
+  const nums = [];
+  text.split(/\r?\n/).forEach(line => {
+    const matches = line.match(/[\d,]{4,}/g);
+    if (!matches) return;
+    const isKey = kw.test(line);
+    matches.forEach(s => {
+      // 키워드 없는 줄은 쉼표 포함 숫자만 금액 후보로 인정 (날짜·전화번호 오인 방지)
+      if (!isKey && !s.includes(',')) return;
+      const n = Number(s.replace(/,/g, ''));
+      if (n >= 100 && n < 100000000) nums.push({ n, key: isKey });
+    });
+  });
+  const keyNums = nums.filter(x => x.key);
+  if (keyNums.length) out.amount = Math.max(...keyNums.map(x => x.n));
+  else if (nums.length) out.amount = Math.max(...nums.map(x => x.n));
+  return out;
+}
+
+document.getElementById('f-receipt').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const status = document.getElementById('ocrStatus');
+  try {
+    status.textContent = '인식 엔진 준비 중… (최초 1회는 시간이 걸립니다)';
+    const worker = await getWorker();
+    status.textContent = '영수증 인식 중…';
+    const { data } = await worker.recognize(file);
+    const text = data.text || '';
+    document.getElementById('ocrText').textContent = text.trim() || '(인식된 글자가 없습니다)';
+    document.getElementById('ocrDetails').style.display = 'block';
+    const parsed = parseReceipt(text);
+    const filled = [];
+    if (parsed.date) { document.getElementById('f-buyDate').value = parsed.date; filled.push('구매일'); }
+    if (parsed.amount) { document.getElementById('f-buyPrice').value = parsed.amount; filled.push('구매가'); }
+    status.textContent = filled.length
+      ? filled.join('·') + ' 자동 입력 완료 — 값이 맞는지 확인한 뒤 나머지 칸을 채우고 행을 추가하세요.'
+      : '날짜·금액을 찾지 못했습니다. 아래 원문을 참고해 직접 입력해주세요.';
+  } catch (err) {
+    tessWorkerPromise = null;
+    status.textContent = '인식 실패: ' + err.message;
+  } finally {
+    e.target.value = '';
+  }
+});
+
+// ---------- 데이터 가져오기 공통 ----------
+function parseCSV(text) {
+  const out = [];
+  let cur = [], field = '', inQ = false;
+  text = text.replace(/^\uFEFF/, '');
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQ) {
+      if (ch === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else inQ = false; }
+      else field += ch;
+    } else if (ch === '"') inQ = true;
+    else if (ch === ',') { cur.push(field); field = ''; }
+    else if (ch === '\n' || ch === '\r') {
+      if (ch === '\r' && text[i + 1] === '\n') i++;
+      cur.push(field); field = '';
+      if (cur.some(c => c.trim() !== '')) out.push(cur);
+      cur = [];
+    } else field += ch;
+  }
+  if (field !== '' || cur.length) { cur.push(field); if (cur.some(c => c.trim() !== '')) out.push(cur); }
+  return out;
+}
+
+// 한글 CSV는 UTF-8 또는 CP949(EUC-KR) 인코딩이 섞여 있어 둘 다 시도
+function readTextSmart(file) {
+  return new Promise((resolve, reject) => {
+    const r1 = new FileReader();
+    r1.onload = () => {
+      const t = r1.result;
+      if (t.includes('�')) {
+        const r2 = new FileReader();
+        r2.onload = () => resolve(r2.result);
+        r2.onerror = reject;
+        r2.readAsText(file, 'euc-kr');
+      } else resolve(t);
+    };
+    r1.onerror = reject;
+    r1.readAsText(file, 'utf-8');
+  });
+}
+
+const impDateRe = /(20\d{2}|\d{2})[.\-\/년]\s?(\d{1,2})[.\-\/월]\s?(\d{1,2})/;
+function impNormDate(s) {
+  const m = String(s).match(impDateRe);
+  if (!m) return null;
+  const y = m[1].length === 2 ? '20' + m[1] : m[1];
+  return y + '-' + m[2].padStart(2, '0') + '-' + m[3].padStart(2, '0');
+}
+function impNormAmt(s) {
+  const t = String(s).replace(/[원,\s]/g, '');
+  return /^-?\d{2,}$/.test(t) ? Math.abs(Number(t)) : null;
+}
+function escHtml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ---------- 카드 이용내역 불러오기 ----------
+// 버전 고정: 공급망 변조·예기치 않은 변경 방지 (Tesseract와 같은 원칙)
+const XLSX_SRC = 'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';
+
+// 카드사별 명세서의 열 제목(헤더)을 찾아 이용일·이용금액·가맹점 열을 매핑한다.
+// 헤더를 못 찾으면 예전 방식(행마다 날짜·금액 추정)으로 대체.
+const CARD_DATE_HDR = /(이용|승인|거래|매출|결제|사용)\s*일(자|시)?$|^일자$/;
+const CARD_AMT_HDR = /(이용|승인|거래|매출|결제|사용)\s*금?액/;
+const CARD_MER_HDR = /가맹점|이용처|사용처|이용하신곳|상호/;
+const CARD_AMT_EXCLUDE = /할부|잔액|수수료|포인트|적립|할인|캐시백|외화/;
+const CARD_CANCEL_CELL = /^(승인|매입|전표)?\s*취소(완료|됨)?$/;
+
+function processCardRows(table) {
+  let hIdx = -1, dCol = -1, aCol = -1, mCol = -1;
+  for (let i = 0; i < Math.min(table.length, 15); i++) {
+    const cells = (table[i] || []).map(c => String(c ?? '').trim());
+    let d = -1, a = -1, m = -1;
+    cells.forEach((c, j) => {
+      if (d < 0 && CARD_DATE_HDR.test(c)) d = j;
+      if (a < 0 && CARD_AMT_HDR.test(c) && !CARD_AMT_EXCLUDE.test(c)) a = j;
+      if (m < 0 && CARD_MER_HDR.test(c)) m = j;
+    });
+    if (d >= 0 && a >= 0) { hIdx = i; dCol = d; aCol = a; mCol = m; break; }
+  }
+  const entries = [];
+  if (hIdx >= 0) {
+    table.slice(hIdx + 1).forEach(r => {
+      const cells = (r || []).map(c => String(c ?? '').trim());
+      if (cells.some(c => CARD_CANCEL_CELL.test(c))) return;
+      if (/^\s*-/.test(cells[aCol] || '')) return; // 음수 금액 = 취소·환불 건
+      const date = impNormDate(cells[dCol] || '');
+      const amount = impNormAmt(cells[aCol] || '');
+      if (!date || amount === null || amount < 100) return;
+      entries.push({ date, amount, merchant: (mCol >= 0 ? cells[mCol] || '' : '').trim() });
+    });
+    if (entries.length) return entries;
+  }
+  table.forEach(colsRaw => {
+    const cols = (colsRaw || []).map(c => String(c ?? ''));
+    let date = null, amount = null, merchant = '';
+    cols.forEach(c => {
+      if (!date) { const d = impNormDate(c); if (d) { date = d; return; } }
+      const a = impNormAmt(c);
+      if (a !== null && a >= 100) { if (amount === null || a > amount) amount = a; return; }
+    });
+    if (!date || amount === null) return;
+    merchant = cols.filter(c => !impNormDate(c) && impNormAmt(c) === null && c.trim().length >= 2)
+      .sort((a, b) => b.length - a.length)[0] || '';
+    entries.push({ date, amount, merchant: merchant.trim() });
+  });
+  return entries;
+}
+
+document.getElementById('cardFile').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const status = document.getElementById('cardStatus');
+  const listBox = document.getElementById('cardList');
+  try {
+    let table;
+    if (/\.xlsx?$/i.test(file.name)) {
+      status.textContent = '엑셀 해석 모듈 준비 중… (최초 1회는 시간이 걸립니다)';
+      if (typeof XLSX === 'undefined') await loadScript(XLSX_SRC);
+      const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      table = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, dateNF: 'yyyy-mm-dd' });
+    } else {
+      table = parseCSV(await readTextSmart(file));
+    }
+    const entries = processCardRows(table);
+    if (!entries.length) {
+      status.textContent = '날짜·금액을 찾지 못했습니다. 카드사에서 받은 이용내역 파일(.xlsx 또는 CSV)인지, 파일에 암호가 걸려 있지 않은지 확인하세요.';
+      listBox.innerHTML = '';
+      return;
+    }
+    status.textContent = entries.length + '건 인식 — [입력]을 누르면 위 폼의 구매일·구매가가 채워집니다.';
+    let html = '<table><thead><tr><th>이용일</th><th>가맹점</th><th>금액</th><th></th></tr></thead><tbody>';
+    entries.forEach((en, i) => {
+      html += '<tr><td>' + en.date + '</td><td>' + escHtml(en.merchant) + '</td>' +
+        '<td class="num">' + fmt(en.amount) + '</td>' +
+        '<td><button type="button" class="ghost card-use" data-d="' + en.date + '" data-a="' + en.amount + '">입력</button></td></tr>';
+    });
+    listBox.innerHTML = html + '</tbody></table>';
+    listBox.querySelectorAll('.card-use').forEach(b => b.addEventListener('click', () => {
+      document.getElementById('f-buyDate').value = b.dataset.d;
+      document.getElementById('f-buyPrice').value = b.dataset.a;
+      status.textContent = '구매일 ' + b.dataset.d + ' · 구매가 ' + fmt(b.dataset.a) + '원 입력됨 — 나머지 칸을 채우고 행을 추가하세요.';
+      document.getElementById('ledgerForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }));
+  } catch (err) {
+    status.textContent = '파일을 읽지 못했습니다: ' + err.message;
+  } finally {
+    e.target.value = '';
+  }
+});
+
+// ---------- 크림 판매내역 붙여넣기 ----------
+let kreamItems = [];
+const kreamDoneRe = /^(정산완료|판매완료|배송완료|거래완료)$/;
+const kreamCancelRe = /^(취소완료|거래실패|반송완료|판매거부)$/;
+const kreamNoiseRe = /(합격|불합격|검수)|^-$/;
+const kreamSizeRe = /^(ONE ?SIZE|FREE|[A-Z]{1,4}|[WM]?\d{2,3}(\.\d)?|US ?\d{1,2}(\.\d)?|EU ?\d{2,3}|\d{2,3}\s*-\s*[0-9A-Za-z가-힣 ]+)$/i;
+
+document.getElementById('kreamParse').addEventListener('click', () => {
+  const text = document.getElementById('kreamText').value;
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  kreamItems = [];
+
+  // 0차: "보관 판매" 정산내역 형식 — 상품명 / I-거래번호 / 사이즈 / 정산금액 / 정산일 (금액 포함)
+  lines.forEach((l, i) => {
+    if (l !== '정산일') return;
+    const date = impNormDate(lines[i + 1] || '');
+    if (!date) return;
+    let amount = null, size = null, name = null;
+    for (let j = i - 1; j >= Math.max(0, i - 10); j--) {
+      const c = lines[j];
+      if (c === '정산일') break;
+      if (c === '정산금액' && amount === null) {
+        const t = String(lines[j + 1] || '').replace(/[원,\s]/g, '');
+        if (/^\d+$/.test(t)) amount = Number(t);
+      }
+      if (c === '사이즈' && size === null) size = lines[j + 1] || '';
+      if (/^I-[A-Z0-9-]+$/i.test(c) && !name) {
+        let cand = lines[j - 1] || '';
+        if (cand === '-' || cand.length < 3) cand = lines[j - 2] || '';
+        if (cand.length >= 3) name = cand;
+        break;
+      }
+    }
+    if (name && amount !== null) {
+      kreamItems.push({ name: size ? name + ' (' + size + ')' : name, date, price: amount });
+    }
+  });
+
+  // 1차: 크림 "종료" 탭 형식 — 상품명 / 사이즈 / 정산일 / 정산완료 (가격 표시 없음)
+  const hasStorageItems = kreamItems.length > 0;   // 0차에서 찾았으면 이 패스는 건너뜀
+  lines.forEach((l, i) => {
+    if (hasStorageItems) return;
+    if (kreamCancelRe.test(l) || !kreamDoneRe.test(l)) return;
+    let date = null, size = null, name = null;
+    for (let j = i - 1; j >= Math.max(0, i - 6) && !name; j--) {
+      const c = lines[j];
+      if (kreamDoneRe.test(c) || kreamCancelRe.test(c)) break;
+      if (kreamNoiseRe.test(c)) continue;
+      if (!date) { const d = impNormDate(c); if (d) { date = d; continue; } }
+      if (!size && kreamSizeRe.test(c)) { size = c; continue; }
+      if (c.length >= 4 && !kreamSizeRe.test(c) && !impNormDate(c)) name = c;
+    }
+    if (name) kreamItems.push({ name: size ? name + ' (' + size + ')' : name, date: date || '', price: '' });
+  });
+
+  // 2차(예비): 가격 표기가 있는 화면 형식
+  if (!kreamItems.length) {
+    const isPrice = s => /^[\d,]{4,}\s*원?$/.test(s) && (s.includes(',') || s.includes('원'));
+    lines.forEach((l, i) => {
+      if (!isPrice(l)) return;
+      const price = Number(l.replace(/[원,\s]/g, ''));
+      let name = null, date = null;
+      for (let j = i - 1; j >= Math.max(0, i - 5) && !name; j--) {
+        const c = lines[j];
+        if (!isPrice(c) && !impNormDate(c) && !/^\d+(\.\d+)?$/.test(c) && !kreamSizeRe.test(c) && c.length >= 4) name = c;
+      }
+      for (let j = Math.max(0, i - 3); j <= Math.min(lines.length - 1, i + 3) && !date; j++) {
+        const d = impNormDate(lines[j]); if (d) date = d;
+      }
+      if (name) kreamItems.push({ name, date: date || '', price });
+    });
+  }
+  const box = document.getElementById('kreamPreview');
+  const bar = document.getElementById('kreamAddBar');
+  if (!kreamItems.length) {
+    box.innerHTML = '<p style="font-size:.88rem;color:var(--red);">항목을 인식하지 못했습니다. "품목명 / 날짜 / 금액"이 각 줄에 들어가도록 붙여넣어 보세요.</p>';
+    bar.style.display = 'none';
+    return;
+  }
+  let html = '<table><thead><tr><th></th><th>품목</th><th>체결일</th><th>체결가</th></tr></thead><tbody>';
+  kreamItems.forEach((it, i) => {
+    html += '<tr>' +
+      '<td><input type="checkbox" class="k-chk" data-i="' + i + '" checked></td>' +
+      '<td><input type="text" class="k-name" data-i="' + i + '" value="' + escHtml(it.name) + '" style="width:220px;padding:4px;border:1px solid var(--line);border-radius:4px;"></td>' +
+      '<td><input type="date" class="k-date" data-i="' + i + '" value="' + it.date + '" style="padding:4px;border:1px solid var(--line);border-radius:4px;"></td>' +
+      '<td><input type="number" class="k-price" data-i="' + i + '" value="' + it.price + '" style="width:110px;padding:4px;border:1px solid var(--line);border-radius:4px;"></td></tr>';
+  });
+  box.innerHTML = html + '</tbody></table>';
+  bar.style.display = 'flex';
+  const noPriceCnt = kreamItems.filter(it => !it.price).length;
+  document.getElementById('kreamStatus').textContent = kreamItems.length + '건 인식 — 확인·수정 후 추가하세요.' +
+    (noPriceCnt > 0 ? ' (크림 종료 화면에는 체결가가 없어 가격 칸이 비어 있습니다. 아는 금액을 입력하거나, 비워두면 0원으로 추가됩니다)' : '');
+});
+
+document.getElementById('kreamAdd').addEventListener('click', () => {
+  const box = document.getElementById('kreamPreview');
+  const type = document.getElementById('kreamType').value;
+  let added = 0;
+  box.querySelectorAll('.k-chk').forEach(chk => {
+    if (!chk.checked) return;
+    const i = chk.dataset.i;
+    const name = box.querySelector('.k-name[data-i="' + i + '"]').value.trim();
+    const date = box.querySelector('.k-date[data-i="' + i + '"]').value;
+    const price = Number(box.querySelector('.k-price[data-i="' + i + '"]').value) || 0;
+    if (!name || !date) return;
+    rows.push({ type, sellDate: date, platform: '크림(KREAM)', item: name, sellPrice: price, buyDate: '', buyPrice: null, reason: '' });
+    added++;
+  });
+  save(); render();
+  document.getElementById('kreamStatus').textContent = added + '건을 대장에 추가했습니다. 가격·구매정보는 각 행의 [수정] 버튼으로 채우세요 (구매가는 카드내역 불러오기와 연결 가능).';
+});
+
+// ---------- 판매 대장 CSV 복원 ----------
+document.getElementById('restoreFile').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const status = document.getElementById('restoreStatus');
+  try {
+    const text = await readTextSmart(file);
+    const rowsCsv = parseCSV(text);
+    if (!rowsCsv.length) { status.textContent = '빈 파일입니다.'; return; }
+    const header = rowsCsv[0].map(h => h.trim());
+    const idx = n => header.indexOf(n);
+    if (idx('판매일') < 0 || idx('품목') < 0 || idx('판매가') < 0) {
+      status.textContent = '이 페이지에서 내려받은 판매대장.csv 형식이 아닙니다.';
+      return;
+    }
+    let added = 0, noPrice = 0;
+    rowsCsv.slice(1).forEach(c => {
+      const get = n => idx(n) >= 0 ? (c[idx(n)] || '').trim() : '';
+      if (!get('판매일')) return;
+      const sellPrice = impNormAmt(get('판매가'));
+      if (sellPrice === null) noPrice++;
+      const buyPrice = impNormAmt(get('구매가'));
+      rows.push({
+        type: get('구분') === '리셀' ? '리셀' : '중고거래',
+        sellDate: impNormDate(get('판매일')) || get('판매일'),
+        platform: get('플랫폼') || '기타',
+        item: get('품목'),
+        sellPrice: sellPrice === null ? 0 : sellPrice,
+        buyDate: impNormDate(get('구매일')) || '',
+        buyPrice: buyPrice,
+        reason: get('판매사유')
+      });
+      added++;
+    });
+    save(); render();
+    status.textContent = added + '건을 복원했습니다.' +
+      (noPrice > 0 ? ' 판매가가 없는 ' + noPrice + '건은 0원으로 들어갔습니다 — 각 행의 [수정] 버튼으로 채워주세요.' : '');
+  } catch (err) {
+    status.textContent = '복원 실패: ' + err.message;
+  } finally {
+    e.target.value = '';
+  }
+});
+
+// ---------- 북마클릿 주소 복사 ----------
+document.getElementById('kreamBmCopy').addEventListener('click', () => {
+  const btn = document.getElementById('kreamBmCopy');
+  navigator.clipboard.writeText(document.getElementById('kreamBm').getAttribute('href')).then(() => {
+    btn.textContent = '복사됨! 즐겨찾기 URL 칸에 붙여넣으세요';
+    setTimeout(() => { btn.textContent = '주소 복사'; }, 3000);
+  }).catch(() => {
+    btn.textContent = '복사 실패 — 버튼을 드래그하는 방법을 사용하세요';
+    setTimeout(() => { btn.textContent = '주소 복사'; }, 3000);
+  });
+});
+
+// ---------- 신고 기한 배너 ----------
+(function () {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const DAY = 86400000;
+  function nextDate(m, d) {
+    let t = new Date(today.getFullYear(), m - 1, d);
+    if (t < today) t = new Date(today.getFullYear() + 1, m - 1, d);
+    return t;
+  }
+  const reg = [nextDate(1, 20), nextDate(7, 20)].sort((a, b) => a - b)[0];
+  const regD = Math.round((reg - today) / DAY);
+  let sso;
+  const mayStart = new Date(today.getFullYear(), 4, 1);
+  const mayEnd = new Date(today.getFullYear(), 4, 31);
+  if (today >= mayStart && today <= mayEnd) {
+    sso = '<b>지금은 종합소득세 신고 기간</b>(5월)입니다';
+  } else {
+    sso = '다음 종합소득세 신고(5월)까지 <b>D-' + Math.round((nextDate(5, 1) - today) / DAY) + '</b>';
+  }
+  document.getElementById('deadlineBar').innerHTML =
+    '매입세액 공제를 위한 사업자등록 데드라인 ' + (reg.getMonth() + 1) + '/' + reg.getDate() +
+    ' <b>D-' + regD + '</b> &nbsp;·&nbsp; ' + sso;
+})();
+
+// ---------- ④ 대응 위저드 ----------
+document.querySelectorAll('.wizard-btns button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.wizard-btns button').forEach(x => x.classList.remove('on'));
+    document.querySelectorAll('.wizard-panel').forEach(p => p.classList.remove('on'));
+    b.classList.add('on');
+    document.getElementById(b.dataset.w).classList.add('on');
+  });
+});
+
+// ---------- ④ 가산세 계산기 ----------
+document.getElementById('calcForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const sales = Number(document.getElementById('c-sales').value) || 0;
+  const purch = Number(document.getElementById('c-purch').value) || 0;
+  const due = new Date(document.getElementById('c-due').value); due.setHours(0, 0, 0, 0);
+  const deduct = document.getElementById('c-deduct').value === 'y';
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const DAY = 86400000;
+
+  const base = Math.max(0, sales * 0.1 - (deduct ? purch * 0.1 : 0));
+  const unreg = Math.round(sales * 0.01);
+  const box = document.getElementById('calcResult');
+
+  if (today <= due) {
+    box.innerHTML = '<div class="note">아직 신고기한(' + document.getElementById('c-due').value + ') 전입니다. ' +
+      '기한 내 신고하면 무신고·납부지연가산세가 붙지 않습니다.<br>예상 부가세 본세 약 <b>' + fmt(Math.round(base)) +
+      '원</b> + 미등록가산세 약 <b>' + fmt(unreg) + '원</b> = 합계 약 <b>' + fmt(Math.round(base) + unreg) + '원</b></div>';
+    return;
+  }
+
+  function scenario(label, fileDate) {
+    const days = Math.round((fileDate - due) / DAY);
+    let red = 0;
+    if (days <= 30) red = 0.5; else if (days <= 91) red = 0.3; else if (days <= 182) red = 0.2;
+    const nonfile = Math.round(base * 0.2 * (1 - red));
+    const late = Math.round(base * 0.00022 * days);
+    return { label, days, red, nonfile, late, total: Math.round(base) + unreg + nonfile + late };
+  }
+  const scenarios = [
+    scenario('오늘 기한후신고', today),
+    scenario('3개월 뒤 신고', new Date(today.getTime() + 90 * DAY)),
+    scenario('6개월 뒤 신고', new Date(today.getTime() + 180 * DAY)),
+    scenario('1년 뒤 신고·적발', new Date(today.getTime() + 365 * DAY))
+  ];
+  const diff = scenarios[3].total - scenarios[0].total;
+
+  let html = '<p style="font-size:.92rem;">부가세 본세 약 <b>' + fmt(Math.round(base)) + '원</b>, 미등록가산세 약 <b>' +
+    fmt(unreg) + '원</b> 기준' + (deduct ? '' : ' (등록 전 매입세액 불공제 가정 — 매출 전액 기준)') + '</p>' +
+    '<div class="table-scroll"><table><thead><tr><th>시나리오</th><th>무신고가산세<br><span class="law">(감면 반영)</span></th>' +
+    '<th>납부지연가산세</th><th>총 예상 부담</th></tr></thead><tbody>';
+  scenarios.forEach((s, i) => {
+    html += '<tr' + (i === 0 ? ' style="background:#f0fdf4;font-weight:700;"' : '') + '><td>' + s.label +
+      (s.red ? ' <span class="law">(' + (s.red * 100) + '% 감면)</span>' : '') + '</td>' +
+      '<td class="num">' + fmt(s.nonfile) + '</td><td class="num">' + fmt(s.late) + '</td>' +
+      '<td class="num">' + fmt(s.total) + '원</td></tr>';
+  });
+  html += '</tbody></table></div>' +
+    '<div class="note">오늘 신고하면 1년 뒤보다 약 <b>' + fmt(diff) + '원</b> 적게 냅니다. 미룰수록 납부지연가산세가 매일 쌓이고 감면 혜택은 사라집니다.' +
+    (sales < 48000000 ? '<br>매출이 4,800만 원 미만이라 간이과세자에 해당하면 부가세 납부의무가 면제될 수 있습니다(신고는 필요) — 126 또는 세무사에게 확인하세요.' : '') +
+    '</div>';
+  box.innerHTML = html;
+});
+
+// ---------- ④ 소명서 초안 생성기 ----------
+document.getElementById('letterForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const usedRows = rows.filter(r => rowType(r) === '중고거래');
+  const resellRows = rows.filter(r => rowType(r) === '리셀');
+  const includeResell = document.getElementById('l-includeResell').checked && resellRows.length > 0;
+  const wrap = document.getElementById('letterWrap');
+  const note = document.getElementById('letterNote');
+  if (!usedRows.length) {
+    wrap.style.display = 'block';
+    note.style.display = 'block';
+    note.textContent = '② 판매 대장에 "중고거래" 구분의 내역을 먼저 입력해야 초안을 만들 수 있습니다.';
+    document.getElementById('letterText').value = '';
+    return;
+  }
+  const name = document.getElementById('l-name').value || '(성명)';
+  const phone = document.getElementById('l-phone').value;
+  const doc = document.getElementById('l-doc').value;
+  const today = new Date();
+  const dateStr = today.getFullYear() + '년 ' + (today.getMonth() + 1) + '월 ' + today.getDate() + '일';
+
+  function rowLine(r, i) {
+    return (i + 1) + '. [' + r.sellDate + '] ' + r.item + ' — ' + r.platform +
+      ', 판매가 ' + fmt(r.sellPrice) + '원' +
+      (r.buyPrice !== null && r.buyPrice !== '' ? ', 취득가 ' + fmt(r.buyPrice) + '원' + (r.buyDate ? ' (' + r.buyDate + ' 취득)' : '') : '') +
+      (r.reason ? ' / 사유: ' + r.reason : '');
+  }
+
+  let totalSell = 0, totalBuy = 0, buyKnown = 0;
+  usedRows.forEach(r => {
+    totalSell += Number(r.sellPrice) || 0;
+    if (r.buyPrice !== null && r.buyPrice !== '') { totalBuy += Number(r.buyPrice); buyKnown++; }
+  });
+  let resellSell = 0, resellBuy = 0;
+  resellRows.forEach(r => {
+    resellSell += Number(r.sellPrice) || 0;
+    if (r.buyPrice !== null && r.buyPrice !== '') resellBuy += Number(r.buyPrice);
+  });
+
+  const planDate = document.getElementById('l-planDate').value;
+  const sections = [];
+
+  sections.push('인적사항\n  - 성명: ' + name + (phone ? '\n  - 연락처: ' + phone : ''));
+
+  sections.push('회신 취지\n' +
+    '  본인의 온라인 중고거래 플랫폼 판매 내역 중 대부분은 사업 목적의 계속적·반복적 판매가 아니라\n' +
+    '  본인이 사용하던 물품 및 소장품을 처분한 것임을 아래와 같이 소명합니다.' +
+    (includeResell ?
+      '\n  아울러 일부 재판매(리셀) 성격의 거래에 대하여는 이를 구분하여 밝히고, 성실히 신고할 것임을 함께 알려드립니다.' : ''));
+
+  sections.push('개인 사용 물품 처분 내역 (총 ' + usedRows.length + '건, 판매금액 합계 ' + fmt(totalSell) + '원)\n' +
+    usedRows.map(rowLine).join('\n'));
+
+  if (buyKnown > 0) {
+    sections.push('위 거래에 사업성이 없는 근거\n' +
+      (totalSell < totalBuy ?
+        '  - 취득가 확인 가능한 ' + buyKnown + '건의 취득가 합계는 ' + fmt(totalBuy) + '원으로,\n' +
+        '    판매금액이 취득가에 미치지 못하여 시세차익을 목적으로 한 거래가 아닙니다.\n' :
+        '  - 취득가 확인 가능한 ' + buyKnown + '건의 취득가 합계는 ' + fmt(totalBuy) + '원입니다.\n' +
+        '    (판매금액이 취득가를 웃도는 거래가 있다면 그 사유를 여기에 직접 보충하세요)\n') +
+      '  - 각 물품은 본인이 실제 사용·보유하던 것으로, 별첨 증빙으로 확인 가능합니다.');
+  }
+
+  if (includeResell) {
+    sections.push('재판매(리셀) 성격 거래의 구분 및 신고 계획 (총 ' + resellRows.length + '건, 판매금액 합계 ' + fmt(resellSell) + '원)\n' +
+      resellRows.map(rowLine).join('\n') + '\n' +
+      '  - 위 거래는 재판매 목적의 구매분으로 사업소득에 해당할 수 있음을 인지하고 있습니다.\n' +
+      '  - 해당 소득에 대하여 종합소득세 기한후신고(해당 시 부가가치세 포함)를 ' +
+      (planDate ? planDate + '까지' : '빠른 시일 내에') + ' 진행하겠습니다.\n' +
+      '  - 신고 시 취득가 등 필요경비 증빙을 함께 제출하겠습니다.');
+  }
+
+  sections.push('첨부 증빙 목록\n' +
+    '  - 물품별 구매내역(주문내역·카드 결제내역) 사본\n' +
+    '  - 판매글 및 실사용 사진 사본\n' +
+    '  - 판매대금 입금 내역 사본\n' +
+    '  ※ 실제 첨부하는 자료에 맞게 수정하세요.');
+
+  const txt =
+    '해명자료 회신서\n\n' +
+    (doc ? '관련: ' + doc + '\n\n' : '') +
+    sections.map((s, i) => (i + 1) + '. ' + s).join('\n\n') + '\n\n' +
+    dateStr + '\n' +
+    '작성자: ' + name + ' (서명)\n';
+
+  document.getElementById('letterText').value = txt;
+  wrap.style.display = 'block';
+  if (includeResell) {
+    note.style.display = 'block';
+    note.innerHTML = '리셀 <b>' + resellRows.length + '건</b>을 인정·신고 의사 문단으로 포함했습니다. ' +
+      '문단에 적은 대로 <b>실제 신고까지 진행해야</b> 의미가 있습니다 — 위의 가산세 계산기로 시기별 부담을 확인하고 ③ 신고 안내 절차로 진행하세요.';
+  } else if (resellRows.length > 0) {
+    note.style.display = 'block';
+    note.innerHTML = '대장의 리셀 <b>' + resellRows.length + '건</b>은 초안에서 제외했습니다. ' +
+      '주의: 세무서는 플랫폼 제출 자료로 전체 거래를 이미 알고 있을 수 있습니다. 일부를 숨기다 적발되면 부정행위(가산세 40%)로 번질 수 있으니, 위 체크박스를 켜서 인정·신고 문단을 포함하는 방안을 권합니다.';
+  } else {
+    note.style.display = 'none';
+  }
+});
+
+document.getElementById('letterCopy').addEventListener('click', () => {
+  const t = document.getElementById('letterText');
+  navigator.clipboard.writeText(t.value).then(() => {
+    document.getElementById('letterCopy').textContent = '복사됨!';
+    setTimeout(() => { document.getElementById('letterCopy').textContent = '복사'; }, 1500);
+  });
+});
+
+document.getElementById('letterSave').addEventListener('click', () => {
+  const blob = new Blob(['\uFEFF' + '' + document.getElementById('letterText').value], { type: 'text/plain;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '해명자료_회신서_초안.txt';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+render();
+
+// 구글 시트 연동 시: 열 때마다 시트의 최신 데이터를 불러와 화면을 맞춘다
+if (REMOTE) {
+  setSync('구글 시트에서 불러오는 중…');
+  google.script.run
+    .withSuccessHandler(serverRows => {
+      if (syncDirty) return; // 불러오는 사이에 사용자가 수정했다면 수정본을 우선
+      rows = Array.isArray(serverRows) ? serverRows : [];
+      try { localStorage.setItem(LS_KEY, JSON.stringify(rows)); } catch (e) {}
+      render();
+      setSync('✓ 구글 시트와 연결됨 — PC·폰 어디서나 같은 데이터를 봅니다', 'ok');
+    })
+    .withFailureHandler(() => setSync('시트에서 불러오지 못했습니다 — 새로고침 해보세요.', 'err'))
+    .loadRows();
+}
+
+// 클라우드 동기화 시작 (Firebase 설정이 없으면 아무 것도 하지 않음)
+cloudInit_();
+</script>
+</body>
+</html>
