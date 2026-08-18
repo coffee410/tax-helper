@@ -74,6 +74,8 @@
   table { border-collapse: collapse; width: 100%; font-size: .88rem; background: #fff; }
   th, td { border: 1px solid var(--line); padding: 7px 9px; text-align: left; white-space: nowrap; }
   th { background: var(--bg); font-size: .84rem; }
+  th[data-sort] { cursor: pointer; user-select: none; }
+  th[data-sort]:hover { color: var(--accent); }
   td.num { text-align: right; }
   tr.flag td { background: #fff7ed; }
   .stats { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
@@ -255,11 +257,27 @@
       <div class="field full"><button type="submit" class="primary">행 추가</button></div>
     </form>
 
+    <div class="toolbar" id="ledgerFilter" style="display:none;align-items:center;margin-top:14px;">
+      <label style="font-size:.88rem;">연도:
+        <select id="yearFilter" style="padding:6px;border:1px solid var(--line);border-radius:6px;font-family:inherit;font-size:.9rem;">
+          <option value="all">전체</option>
+        </select>
+      </label>
+      <span style="font-size:.82rem;color:var(--muted);">열 제목을 누르면 정렬됩니다 (한 번 더: 역순, 또 한 번: 해제)</span>
+    </div>
     <div class="table-scroll">
       <table id="ledgerTable">
         <thead><tr>
-          <th>구분</th><th>판매일</th><th>플랫폼</th><th>품목</th><th>판매가</th><th>구매일</th><th>구매가</th>
-          <th>손익</th><th>보유기간</th><th>판매 사유</th><th></th>
+          <th data-sort="type" data-label="구분">구분</th>
+          <th data-sort="sellDate" data-label="판매일">판매일</th>
+          <th data-sort="platform" data-label="플랫폼">플랫폼</th>
+          <th data-sort="item" data-label="품목">품목</th>
+          <th data-sort="sellPrice" data-label="판매가">판매가</th>
+          <th data-sort="buyDate" data-label="구매일">구매일</th>
+          <th data-sort="buyPrice" data-label="구매가">구매가</th>
+          <th data-sort="profit" data-label="손익">손익</th>
+          <th data-sort="hold" data-label="보유기간">보유기간</th>
+          <th data-sort="reason" data-label="판매 사유">판매 사유</th><th></th>
         </tr></thead>
         <tbody></tbody>
       </table>
@@ -650,13 +668,58 @@ function isFlagged(r) {
   return (profit !== null && profit > 0) || (days !== null && days >= 0 && days < 30);
 }
 
+// 표 보기 상태: 연도 필터·정렬 (데이터 자체는 바꾸지 않고 보여주는 순서만 바꾼다)
+let viewYear = 'all', sortKey = null, sortDir = 1;
+
+function sortVal(r, key) {
+  switch (key) {
+    case 'type': return rowType(r);
+    case 'sellDate': return r.sellDate || '';
+    case 'platform': return r.platform || '';
+    case 'item': return r.item || '';
+    case 'sellPrice': return Number(r.sellPrice) || 0;
+    case 'buyDate': return r.buyDate || null;
+    case 'buyPrice': return (r.buyPrice === '' || r.buyPrice === null || r.buyPrice === undefined) ? null : Number(r.buyPrice);
+    case 'profit': return (r.buyPrice !== '' && r.buyPrice !== null) ? r.sellPrice - r.buyPrice : null;
+    case 'hold': return holdDays(r.buyDate, r.sellDate);
+    case 'reason': return r.reason || '';
+  }
+}
+
 function render() {
   const tbody = document.querySelector('#ledgerTable tbody');
   tbody.innerHTML = '';
   let totalSell = 0, totalProfit = 0, hasProfitData = false, flagCount = 0;
   let usedCount = 0, resellCount = 0, resellProfit = 0, resellHasProfit = false;
 
-  rows.forEach((r, i) => {
+  // 연도 필터 목록 갱신 (내역에 있는 연도만)
+  const years = [...new Set(rows.map(r => (r.sellDate || '').slice(0, 4)).filter(y => /^\d{4}$/.test(y)))].sort().reverse();
+  if (viewYear !== 'all' && !years.includes(viewYear)) viewYear = 'all';
+  document.getElementById('ledgerFilter').style.display = rows.length ? 'flex' : 'none';
+  document.getElementById('yearFilter').innerHTML =
+    '<option value="all">전체</option>' + years.map(y => '<option>' + y + '</option>').join('');
+  document.getElementById('yearFilter').value = viewYear;
+
+  // 정렬 표시(▲▼) 갱신
+  document.querySelectorAll('#ledgerTable th[data-sort]').forEach(th => {
+    th.textContent = th.dataset.label + (sortKey === th.dataset.sort ? (sortDir === 1 ? ' ▲' : ' ▼') : '');
+  });
+
+  // 필터·정렬이 적용된 보기 목록 (원본 행 번호 i는 수정·삭제용으로 유지)
+  let view = rows.map((r, i) => ({ r, i }))
+    .filter(x => viewYear === 'all' || (x.r.sellDate || '').slice(0, 4) === viewYear);
+  if (sortKey) {
+    view.sort((a, b) => {
+      const va = sortVal(a.r, sortKey), vb = sortVal(b.r, sortKey);
+      if (va === null && vb === null) return 0;
+      if (va === null) return 1;  // 값 없는 행은 항상 아래로
+      if (vb === null) return -1;
+      const c = (typeof va === 'number' && typeof vb === 'number') ? va - vb : String(va).localeCompare(String(vb), 'ko');
+      return c * sortDir;
+    });
+  }
+
+  view.forEach(({ r, i }) => {
     const profit = (r.buyPrice !== '' && r.buyPrice !== null) ? r.sellPrice - r.buyPrice : null;
     const days = holdDays(r.buyDate, r.sellDate);
     const flagged = isFlagged(r);
@@ -710,12 +773,13 @@ function render() {
   }));
 
   const stats = document.getElementById('ledgerStats');
+  const yl = viewYear === 'all' ? '' : ' (' + viewYear + '년)';
   stats.innerHTML =
-    '<div class="stat"><div class="v">' + usedCount + '건 / ' + resellCount + '건</div><div class="k">중고거래 / 리셀</div></div>' +
-    '<div class="stat"><div class="v">' + fmt(totalSell) + '원</div><div class="k">총 판매액</div></div>' +
-    '<div class="stat"><div class="v">' + (hasProfitData ? fmt(totalProfit) + '원' : '-') + '</div><div class="k">총 손익 (구매가 입력분)</div></div>' +
+    '<div class="stat"><div class="v">' + usedCount + '건 / ' + resellCount + '건</div><div class="k">중고거래 / 리셀' + yl + '</div></div>' +
+    '<div class="stat"><div class="v">' + fmt(totalSell) + '원</div><div class="k">총 판매액' + yl + '</div></div>' +
+    '<div class="stat"><div class="v">' + (hasProfitData ? fmt(totalProfit) + '원' : '-') + '</div><div class="k">총 손익 (구매가 입력분)' + yl + '</div></div>' +
     (resellCount > 0
-      ? '<div class="stat"><div class="v">' + (resellHasProfit ? fmt(resellProfit) + '원' : '-') + '</div><div class="k">리셀 손익 합계</div></div>'
+      ? '<div class="stat"><div class="v">' + (resellHasProfit ? fmt(resellProfit) + '원' : '-') + '</div><div class="k">리셀 손익 합계' + yl + '</div></div>'
       : '');
 
   renderSummary();
@@ -776,6 +840,22 @@ function renderSummary() {
   document.getElementById('summaryTable').innerHTML = html + '</tbody></table>';
 }
 document.getElementById('sumMode').addEventListener('change', renderSummary);
+
+// 연도 필터·열 정렬 이벤트
+document.getElementById('yearFilter').addEventListener('change', e => {
+  viewYear = e.target.value;
+  render();
+});
+document.querySelectorAll('#ledgerTable th[data-sort]').forEach(th => th.addEventListener('click', () => {
+  const k = th.dataset.sort;
+  if (sortKey === k) {
+    if (sortDir === 1) sortDir = -1;
+    else { sortKey = null; sortDir = 1; } // 세 번째 클릭: 정렬 해제 (입력 순서로)
+  } else {
+    sortKey = k; sortDir = 1;
+  }
+  render();
+}));
 
 // ---------- 기기 간 동기화 (구글 Apps Script 웹앱으로 서비스될 때만 동작) ----------
 const REMOTE = typeof google !== 'undefined' && google.script && google.script.run;
