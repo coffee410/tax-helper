@@ -158,6 +158,9 @@
     * { transition: none !important; }
   }
   /* 대장 표: 품목·판매사유는 줄바꿈 허용 — 아니면 표가 옆으로 끝없이 길어져 금액 칸이 화면 밖으로 밀림 */
+  /* 대장은 칸이 많아 본문 폭(880px)으로는 가로 스크롤이 생긴다 — 이 카드만 화면 폭에 맞춰 넓힌다 */
+  #ledgerCard { max-width: 1440px; width: calc(100vw - 32px); margin-left: 50%; transform: translateX(-50%); }
+  @media (max-width: 1000px) { #ledgerCard { width: auto; margin-left: 0; transform: none; } }
   #ledgerTable td.wrap { white-space: normal; word-break: keep-all; overflow-wrap: anywhere; min-width: 180px; max-width: 300px; }
   #ledgerTable td.wrap-wide { white-space: normal; word-break: keep-all; overflow-wrap: anywhere; min-width: 220px; max-width: 360px; }
   /* 판매 사유 — 본문 + 작은 회색 번호줄로 나눠 표시 */
@@ -293,7 +296,7 @@
 
 <!-- ============ ② 판매 대장 ============ -->
 <section class="tab" id="tab-ledger">
-  <div class="card">
+  <div class="card" id="ledgerCard">
     <h2>판매 내역 대장 작성</h2>
     <p style="font-size:.9rem;color:var(--muted);margin-bottom:12px;">
       입력한 내용은 기본적으로 <b>이 브라우저에만 저장</b>됩니다. 구글 시트 연동 버전(웹앱)에서는 본인 구글 계정의 시트에 저장되어
