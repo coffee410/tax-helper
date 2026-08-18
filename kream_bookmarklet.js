@@ -160,11 +160,78 @@
     history.back();
     return await waitFor(function () { return !modalOpen(); }, 1500);
   }
+  // ---------- 보관 판매 > 종료 목록: 페이지 순회 수집 ----------
+  // 이 화면은 목록에 이미 정산금액·정산일이 있어 상세를 열 필요가 없다.
+  // 페이지네이션(1~5 + 다음 그룹 화살표)을 넘기며 전부 읽는다.
+  function pageLinks() {
+    return [].slice.call(document.querySelectorAll('a.btn_page'))
+      .filter(function (a) { return /^\d+$/.test(a.textContent.trim()); });
+  }
+  function activePage() {
+    var a = document.querySelector('a.btn_page.active');
+    return a ? Number(a.textContent.trim()) : null;
+  }
+  function svgCls(a) { var s = a.querySelector('svg'); return s ? String(s.getAttribute('class') || '') : ''; }
+  function nextGroupBtn() { return document.querySelector('.next_btn_box a.btn_arr') || null; }
+  function firstPageBtn() {
+    return [].slice.call(document.querySelectorAll('.prev_btn_box a.btn_arr'))
+      .filter(function (a) { return /first/.test(svgCls(a)); })[0] || null;
+  }
+  function firstOid() { var m = document.body.innerText.match(/I-[A-Z0-9-]+/); return m ? m[0] : ''; }
+  function isPagedInventory() {
+    return !!document.querySelector('a.btn_page') &&
+      document.body.innerText.indexOf('정산금액') >= 0 && document.body.innerText.indexOf('정산일') >= 0;
+  }
+  async function pageWalk(setStatus) {
+    var fb = firstPageBtn();
+    if (fb && activePage() !== 1) { setStatus('첫 페이지로 이동 중…'); fb.click(); await sleep(1600); }
+    var buf = loadBuf();
+    var byNum = {};
+    buf.forEach(function (b) { if (b.num) byNum[b.num] = 1; });
+    var added = 0, steps = 0, stall = 0;
+    while (steps++ < 200) {
+      if (!running) { setStatus('중단했습니다. 누적 ' + loadBuf().length + '건.'); return; }
+      var before = added;
+      scanList().forEach(function (it) {
+        if (!it.oid || byNum[it.oid]) return;
+        byNum[it.oid] = 1;
+        buf.push({ num: it.oid, name: it.name, date: it.date, price: it.price, fee: null, settle: null, memo: it.memo });
+        added++;
+      });
+      saveBuf(buf); render();
+      setStatus((activePage() ? activePage() + '페이지' : '') + ' · 누적 ' + buf.length + '건');
+      if (added === before) stall++; else stall = 0;
+      if (stall >= 3) break;
+      var cur = activePage();
+      if (cur == null) break;
+      var oid0 = firstOid();
+      var nxt = pageLinks().filter(function (a) { return Number(a.textContent.trim()) === cur + 1; })[0];
+      if (nxt) nxt.click();
+      else { var g = nextGroupBtn(); if (!g) break; g.click(); }
+      var moved = false;
+      for (var w = 0; w < 40; w++) { await sleep(200); if (firstOid() !== oid0) { moved = true; break; } }
+      if (!moved) { setStatus('다음 페이지가 열리지 않아 멈췄습니다. 누적 ' + buf.length + '건.'); return; }
+      await sleep(250);
+    }
+    setStatus('완료 — 새로 ' + added + '건 수집. 누적 ' + loadBuf().length + '건. [CSV 저장]을 누르세요.');
+  }
+
   var running = false;
   async function autoCollect(setStatus) {
     if (running) return;
     running = true;
     try {
+      if (isPagedInventory()) {
+        var totalTxt = (document.body.innerText.match(/정산완료\s*(\d+)/) || [])[1];
+        if (!confirm('보관 판매 종료 목록을 페이지마다 자동으로 넘기며 수집합니다'
+          + (totalTxt ? ' (정산완료 ' + totalTxt + '건)' : '') + '.\n\n'
+          + '이 화면은 목록에 정산금액이 있어 상세를 열지 않습니다.\n'
+          + '수집 중에는 화면을 건드리지 마세요. 진행할까요?')) {
+          setStatus('취소했습니다.'); return;
+        }
+        await pageWalk(setStatus);
+        return;
+      }
       setStatus('목록을 끝까지 불러오는 중…');
       await autoScroll(setStatus);
       var n = detailButtons().length;
@@ -213,9 +280,10 @@
     if (!buf.length) return false;
     var rows = buf.map(function (b) {
       var memo = [];
+      if (b.memo) memo.push(b.memo);
       if (b.fee !== null && b.fee !== undefined) memo.push('크림 수수료 ' + fmtWon(b.fee) + '원');
       if (b.settle !== null && b.settle !== undefined) memo.push('정산금액 ' + fmtWon(b.settle) + '원');
-      if (b.num) memo.push(b.num);
+      if (b.num && memo.indexOf(b.num) < 0 && memo.join(' ').indexOf(b.num) < 0) memo.push(b.num);
       return ['리셀', b.date, '크림(KREAM)', b.name, b.price, '', '', '', '', memo.join(' / ')].map(esc).join(',');
     });
     localStorage.removeItem(KEY);
@@ -236,13 +304,14 @@
       if (l !== '정산일') return;
       var date = normDateStrict(lines[i + 1] || '');
       if (!date) return;
-      var amount = null, size = null, name = null, j, c;
+      var amount = null, size = null, name = null, oid = null, j, c;
       for (j = i - 1; j >= Math.max(0, i - 10); j--) {
         c = lines[j];
         if (c === '정산일') break;
         if (c === '정산금액' && amount === null) amount = amt(lines[j + 1] || '');
         if (c === '사이즈' && size === null) size = lines[j + 1] || '';
         if (/^I-[A-Z0-9-]+$/i.test(c) && !name) {
+          oid = c;
           var cand = lines[j - 1] || '';
           if (cand === '-' || cand.length < 3) cand = lines[j - 2] || '';
           if (cand.length >= 3) name = cand;
@@ -250,7 +319,10 @@
         }
       }
       if (name && amount !== null) {
-        items.push({ name: size ? name + ' (' + size + ')' : name, date: date, price: amount, memo: '크림 정산금액 기준' });
+        items.push({
+          oid: oid, name: size ? name + ' (' + size + ')' : name, date: date, price: amount,
+          memo: '크림 정산금액 기준' + (oid ? ' / ' + oid : '')
+        });
       }
     });
     // 목록 2: 판매내역 "종료" 탭 — 상품명 / 사이즈 / 정산일 / 정산완료 (가격 없음)
