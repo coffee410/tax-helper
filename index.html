@@ -699,6 +699,8 @@ function render() {
   document.getElementById('yearFilter').innerHTML =
     '<option value="all">전체</option>' + years.map(y => '<option>' + y + '</option>').join('');
   document.getElementById('yearFilter').value = viewYear;
+  document.getElementById('csvBtn').textContent =
+    viewYear === 'all' ? 'CSV(엑셀) 내려받기' : 'CSV 내려받기 — ' + viewYear + '년만';
 
   // 정렬 표시(▲▼) 갱신
   document.querySelectorAll('#ledgerTable th[data-sort]').forEach(th => {
@@ -1222,7 +1224,9 @@ document.getElementById('ledgerForm').addEventListener('submit', e => {
 });
 
 document.getElementById('csvBtn').addEventListener('click', () => {
-  if (rows.length === 0) { alert('내역이 없습니다.'); return; }
+  // 연도 필터가 선택돼 있으면 그 연도만, '전체'면 모든 내역을 내려받는다
+  const exportRows = rows.filter(r => viewYear === 'all' || (r.sellDate || '').slice(0, 4) === viewYear);
+  if (exportRows.length === 0) { alert('내역이 없습니다.'); return; }
   const esc = v => {
     let s = String(v ?? '');
     // 엑셀 수식 주입(CSV injection) 방지: 수식으로 해석될 수 있는 텍스트는 ' 접두
@@ -1231,7 +1235,7 @@ document.getElementById('csvBtn').addEventListener('click', () => {
   };
   const header = ['구분','판매일','플랫폼','품목','판매가','구매일','구매가','손익','보유기간','판매사유'];
   const lines = [header.map(esc).join(',')];
-  rows.forEach(r => {
+  exportRows.forEach(r => {
     const profit = (r.buyPrice !== null && r.buyPrice !== '') ? r.sellPrice - r.buyPrice : '';
     lines.push([rowType(r), r.sellDate, r.platform, r.item, r.sellPrice, r.buyDate, r.buyPrice ?? '', profit,
       holdLabel(holdDays(r.buyDate, r.sellDate)), r.reason].map(esc).join(','));
@@ -1240,7 +1244,7 @@ document.getElementById('csvBtn').addEventListener('click', () => {
   const blob = new Blob(['\uFEFF' + '' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = '판매대장.csv';
+  a.download = viewYear === 'all' ? '판매대장.csv' : '판매대장_' + viewYear + '년.csv';
   a.click();
   URL.revokeObjectURL(a.href);
 });
