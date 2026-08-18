@@ -268,6 +268,18 @@
     <div class="stats" id="ledgerStats"></div>
     <div class="note" id="flagNote" style="display:none;"></div>
 
+    <div id="summaryWrap" style="display:none;">
+      <h3 style="margin:18px 0 8px;">기간·판매처별 집계</h3>
+      <label style="font-size:.88rem;">보기:
+        <select id="sumMode" style="padding:6px;border:1px solid var(--line);border-radius:6px;font-family:inherit;font-size:.9rem;">
+          <option value="month">월별</option>
+          <option value="year">연도별</option>
+          <option value="platform">판매처별</option>
+        </select>
+      </label>
+      <div class="table-scroll" style="margin-top:10px;" id="summaryTable"></div>
+    </div>
+
     <div class="toolbar">
       <button class="ghost" id="csvBtn">CSV(엑셀) 내려받기</button>
       <button class="ghost" id="clearBtn">전체 삭제</button>
@@ -706,6 +718,8 @@ function render() {
       ? '<div class="stat"><div class="v">' + (resellHasProfit ? fmt(resellProfit) + '원' : '-') + '</div><div class="k">리셀 손익 합계</div></div>'
       : '');
 
+  renderSummary();
+
   const flagNote = document.getElementById('flagNote');
   if (flagCount > 0) {
     flagNote.style.display = 'block';
@@ -728,6 +742,40 @@ function save() {
   pushRemote();
   pushCloud_();
 }
+
+// ---------- 기간·판매처별 집계 ----------
+function renderSummary() {
+  const wrap = document.getElementById('summaryWrap');
+  if (!rows.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  const mode = document.getElementById('sumMode').value;
+  const groups = new Map();
+  rows.forEach(r => {
+    let key;
+    if (mode === 'year') key = (r.sellDate || '').slice(0, 4) || '날짜 없음';
+    else if (mode === 'month') key = (r.sellDate || '').slice(0, 7) || '날짜 없음';
+    else key = r.platform || '기타';
+    if (!groups.has(key)) groups.set(key, { cnt: 0, used: 0, resell: 0, sell: 0, profit: 0, hasProfit: false });
+    const g = groups.get(key);
+    g.cnt++;
+    if (rowType(r) === '리셀') g.resell++; else g.used++;
+    g.sell += Number(r.sellPrice) || 0;
+    if (r.buyPrice !== '' && r.buyPrice !== null) { g.profit += r.sellPrice - r.buyPrice; g.hasProfit = true; }
+  });
+  const keys = [...groups.keys()];
+  if (mode === 'platform') keys.sort((a, b) => groups.get(b).sell - groups.get(a).sell);
+  else keys.sort().reverse(); // 최신 연도·월이 위로
+  let html = '<table><thead><tr><th>' + (mode === 'year' ? '연도' : mode === 'month' ? '월' : '판매처') + '</th>' +
+    '<th>건수</th><th>중고</th><th>리셀</th><th>총 판매액</th><th>손익 (구매가 입력분)</th></tr></thead><tbody>';
+  keys.forEach(k => {
+    const g = groups.get(k);
+    html += '<tr><td>' + escHtml(k) + '</td><td class="num">' + g.cnt + '</td><td class="num">' + g.used + '</td>' +
+      '<td class="num">' + g.resell + '</td><td class="num">' + fmt(g.sell) + '</td>' +
+      '<td class="num">' + (g.hasProfit ? fmt(g.profit) : '-') + '</td></tr>';
+  });
+  document.getElementById('summaryTable').innerHTML = html + '</tbody></table>';
+}
+document.getElementById('sumMode').addEventListener('change', renderSummary);
 
 // ---------- 기기 간 동기화 (구글 Apps Script 웹앱으로 서비스될 때만 동작) ----------
 const REMOTE = typeof google !== 'undefined' && google.script && google.script.run;
