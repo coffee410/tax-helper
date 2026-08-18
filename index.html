@@ -163,6 +163,15 @@
   @media (max-width: 1000px) { #ledgerCard { width: auto; margin-left: 0; transform: none; } }
   #ledgerTable td.wrap { white-space: normal; word-break: keep-all; overflow-wrap: anywhere; min-width: 180px; max-width: 300px; }
   #ledgerTable td.wrap-wide { white-space: normal; word-break: keep-all; overflow-wrap: anywhere; min-width: 220px; max-width: 360px; }
+  /* 페이지 이동 줄 */
+  #ledgerPager { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  #ledgerPager .pg-info { font-size: .85rem; color: var(--muted); margin-right: 8px; }
+  #ledgerPager .pg { min-width: 34px; padding: 5px 9px; border: 1px solid var(--line); background: #fff;
+    border-radius: 8px; font-size: .85rem; font-family: inherit; cursor: pointer; color: var(--ink); }
+  #ledgerPager .pg:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  #ledgerPager .pg.on { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  #ledgerPager .pg:disabled { color: #c4c9d0; cursor: default; }
+  #ledgerPager .pg-gap { color: var(--muted); padding: 0 2px; }
   /* 판매 사유 — 본문 + 작은 회색 번호줄로 나눠 표시 */
   .reason-main { display: block; }
   .reason-sub { display: block; font-size: .72rem; color: var(--muted); letter-spacing: .01em; margin-top: 2px; }
@@ -342,6 +351,14 @@
           <option value="all">전체</option>
         </select>
       </label>
+      <label style="font-size:.88rem;">한 페이지에:
+        <select id="pageSizeSel" style="padding:6px;border:1px solid var(--line);border-radius:6px;font-family:inherit;font-size:.9rem;">
+          <option value="25">25건</option>
+          <option value="50" selected>50건</option>
+          <option value="100">100건</option>
+          <option value="all">전체</option>
+        </select>
+      </label>
       <span style="font-size:.82rem;color:var(--muted);">열 제목을 누르면 정렬됩니다 (한 번 더: 역순, 또 한 번: 해제)</span>
     </div>
     <div class="table-scroll">
@@ -363,6 +380,7 @@
         <tbody></tbody>
       </table>
     </div>
+    <div id="ledgerPager" style="display:none;"></div>
 
     <div class="stats" id="ledgerStats"></div>
     <div class="note" id="flagNote" style="display:none;"></div>
@@ -1049,8 +1067,9 @@ function isFlagged(r) {
   return (profit !== null && profit > 0) || (days !== null && days >= 0 && days < 30);
 }
 
-// 표 보기 상태: 연도 필터·정렬 (데이터 자체는 바꾸지 않고 보여주는 순서만 바꾼다)
+// 표 보기 상태: 연도 필터·정렬·페이지 (데이터 자체는 바꾸지 않고 보여주는 방식만 바꾼다)
 let viewYear = 'all', sortKey = null, sortDir = 1;
+let pageSize = 50, pageNo = 1;
 
 function sortVal(r, key) {
   switch (key) {
@@ -1065,6 +1084,40 @@ function sortVal(r, key) {
     case 'hold': return holdDays(r.buyDate, r.sellDate);
     case 'reason': return r.reason || '';
   }
+}
+
+// 표 아래 페이지 이동 줄 (현재 위치 ±2 페이지 + 처음/끝)
+function renderPager(total, totalPages, per) {
+  const box = document.getElementById('ledgerPager');
+  if (!box) return;
+  if (!total) { box.innerHTML = ''; box.style.display = 'none'; return; }
+  box.style.display = 'flex';
+  const from = pageSize === 'all' ? 1 : (pageNo - 1) * per + 1;
+  const to = pageSize === 'all' ? total : Math.min(pageNo * per, total);
+  let nums = [];
+  if (pageSize !== 'all' && totalPages > 1) {
+    const set = new Set([1, totalPages]);
+    for (let p = pageNo - 2; p <= pageNo + 2; p++) if (p >= 1 && p <= totalPages) set.add(p);
+    nums = [...set].sort((a, b) => a - b);
+  }
+  let html = '<span class="pg-info">' + total + '건 중 <b>' + from + '–' + to + '</b></span>';
+  if (nums.length) {
+    html += '<button class="pg" data-p="' + (pageNo - 1) + '"' + (pageNo === 1 ? ' disabled' : '') + '>‹ 이전</button>';
+    let prev = 0;
+    nums.forEach(p => {
+      if (prev && p - prev > 1) html += '<span class="pg-gap">…</span>';
+      html += '<button class="pg' + (p === pageNo ? ' on' : '') + '" data-p="' + p + '">' + p + '</button>';
+      prev = p;
+    });
+    html += '<button class="pg" data-p="' + (pageNo + 1) + '"' + (pageNo === totalPages ? ' disabled' : '') + '>다음 ›</button>';
+  }
+  box.innerHTML = html;
+  box.querySelectorAll('.pg[data-p]').forEach(b => b.addEventListener('click', () => {
+    if (b.disabled) return;
+    pageNo = Number(b.dataset.p);
+    render();
+    document.getElementById('ledgerFilter').scrollIntoView({ block: 'start' });
+  }));
 }
 
 function render() {
@@ -1102,11 +1155,10 @@ function render() {
     });
   }
 
-  view.forEach(({ r, i }) => {
+  // 합계·경고 집계는 (페이지가 아니라) 필터에 걸린 전체를 기준으로 낸다
+  view.forEach(({ r }) => {
     const profit = (r.buyPrice !== '' && r.buyPrice !== null) ? r.sellPrice - r.buyPrice : null;
-    const days = holdDays(r.buyDate, r.sellDate);
-    const flagged = isFlagged(r);
-    if (flagged) flagCount++;
+    if (isFlagged(r)) flagCount++;
     totalSell += Number(r.sellPrice) || 0;
     if (profit !== null) { totalProfit += profit; hasProfitData = true; }
     if (rowType(r) === '리셀') {
@@ -1115,7 +1167,20 @@ function render() {
     } else {
       usedCount++;
     }
+  });
 
+  // 페이지 나누기 — 한 번에 pageSize개씩만 그린다 ('all'이면 전부)
+  const per = pageSize === 'all' ? view.length || 1 : pageSize;
+  const totalPages = Math.max(1, Math.ceil(view.length / per));
+  if (pageNo > totalPages) pageNo = totalPages;
+  if (pageNo < 1) pageNo = 1;
+  const pageView = pageSize === 'all' ? view : view.slice((pageNo - 1) * per, pageNo * per);
+  renderPager(view.length, totalPages, per);
+
+  pageView.forEach(({ r, i }) => {
+    const profit = (r.buyPrice !== '' && r.buyPrice !== null) ? r.sellPrice - r.buyPrice : null;
+    const days = holdDays(r.buyDate, r.sellDate);
+    const flagged = isFlagged(r);
     const tr = document.createElement('tr');
     if (flagged) tr.className = 'flag';
     const tag = rowType(r) === '리셀'
@@ -1234,10 +1299,17 @@ document.getElementById('sumMode').addEventListener('change', renderSummary);
 // 연도 필터·열 정렬 이벤트
 document.getElementById('yearFilter').addEventListener('change', e => {
   viewYear = e.target.value;
+  pageNo = 1;          // 필터가 바뀌면 첫 페이지부터
+  render();
+});
+document.getElementById('pageSizeSel').addEventListener('change', e => {
+  pageSize = e.target.value === 'all' ? 'all' : Number(e.target.value);
+  pageNo = 1;
   render();
 });
 document.querySelectorAll('#ledgerTable th[data-sort]').forEach(th => th.addEventListener('click', () => {
   const k = th.dataset.sort;
+  pageNo = 1;          // 정렬이 바뀌면 첫 페이지부터
   if (sortKey === k) {
     if (sortDir === 1) sortDir = -1;
     else { sortKey = null; sortDir = 1; } // 세 번째 클릭: 정렬 해제 (입력 순서로)
