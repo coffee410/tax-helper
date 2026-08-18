@@ -352,9 +352,10 @@
           <th data-sort="sellDate" data-label="판매일">판매일</th>
           <th data-sort="platform" data-label="판매처">판매처</th>
           <th data-sort="sellPrice" data-label="판매가">판매가</th>
-          <th data-sort="profit" data-label="손익">손익</th>
+          <th data-sort="profit" data-label="수익">수익</th>
           <th data-sort="hold" data-label="보유기간">보유기간</th>
-          <th data-sort="reason" data-label="판매 사유">판매 사유</th><th>증빙</th><th></th>
+          <th>매입 사진</th><th>판매 사진</th>
+          <th data-sort="reason" data-label="판매 사유">판매 사유</th><th></th>
         </tr></thead>
         <tbody></tbody>
       </table>
@@ -494,6 +495,7 @@
       <p style="font-size:.88rem;color:var(--muted);margin:8px 0;">
         영수증·주문 상세 캡처 파일을 한꺼번에 올리면, <b>파일명에 들어 있는 번호</b>(보관번호 I-…, 판매 주문번호 A-…, 구매 주문번호 B-…)와
         판매 사유 칸의 번호가 같은 대장 행에 자동으로 연결됩니다. 각 행의 <b>📎 버튼</b>으로 사진을 보거나 직접 추가할 수 있습니다.<br>
+        파일명이 <b>무신사·웍스아웃·크림구매</b>로 시작하면 <b>매입 사진</b>, <b>크림판매·보관판매</b>로 시작하면 <b>판매 사진</b> 칸에 들어갑니다.<br>
         ※ 사진은 <b>이 기기의 브라우저에만</b> 저장됩니다(용량 문제로 계정 동기화 대상 아님). 다른 기기에서 보려면 그 기기에서 다시 올리세요.
         원본 파일도 함께 보관하는 것을 권장합니다.
       </p>
@@ -706,41 +708,72 @@
 const EV_TOKEN_RE = /(?:[IAB]-[A-Z]{2}\d[\d-]*\d|#EV-[A-Z0-9]{6})/g;
 function evTokens(s) { return [...new Set(String(s || '').toUpperCase().match(EV_TOKEN_RE) || [])]; }
 
+// 사진 종류: 매입 증빙(구매 영수증)인지 판매 증빙인지 — 파일명 앞부분으로 판별
+function evKindOfName(name) {
+  const n = String(name || '');
+  if (/^(크림판매|크림직접판매|보관판매|판매)/.test(n)) return 'sell';
+  if (/^(무신사|웍스아웃|크림구매|구매|매입)/.test(n)) return 'buy';
+  if (/A-[A-Z]{2}\d/.test(n) && !/[IB]-[A-Z]{2}\d/.test(n)) return 'sell';
+  return 'buy';
+}
+const EV_KIND_LABEL = { buy: '매입', sell: '판매' };
+
 let evDB = null;
 let evIndex = new Map();   // token -> [사진 id...]
+let evKinds = new Map();   // 사진 id -> 'buy' | 'sell'
 function evOpen() {
   return new Promise((res, rej) => {
     if (evDB) return res(evDB);
     if (!window.indexedDB) return rej(new Error('no idb'));
-    const q = indexedDB.open('evidence-v1', 1);
+    const q = indexedDB.open('evidence-v1', 2);
     q.onupgradeneeded = e => {
-      const s = e.target.result.createObjectStore('img', { keyPath: 'id', autoIncrement: true });
-      s.createIndex('token', 'tokens', { multiEntry: true });
-      s.createIndex('name', 'name');
+      const db = e.target.result;
+      const tx = e.target.transaction;
+      const s = db.objectStoreNames.contains('img')
+        ? tx.objectStore('img')
+        : db.createObjectStore('img', { keyPath: 'id', autoIncrement: true });
+      if (!s.indexNames.contains('token')) s.createIndex('token', 'tokens', { multiEntry: true });
+      if (!s.indexNames.contains('name')) s.createIndex('name', 'name');
+      if (!s.indexNames.contains('kind')) s.createIndex('kind', 'kind');
     };
     q.onsuccess = () => { evDB = q.result; res(evDB); };
     q.onerror = () => rej(q.error);
   });
 }
-// 토큰→id 목록 캐시 재구성 (키 커서만 사용 — 이미지 본문은 안 읽어 가볍다)
+// 토큰→id, id→종류 캐시 재구성 (키 커서만 사용 — 이미지 본문은 안 읽어 가볍다)
 function evRebuildIndex() {
-  return evOpen().then(db => new Promise(res => {
-    const m = new Map();
-    const cur = db.transaction('img').objectStore('img').index('token').openKeyCursor();
-    cur.onsuccess = e => {
-      const c = e.target.result;
-      if (!c) { evIndex = m; return res(); }
-      if (!m.has(c.key)) m.set(c.key, []);
-      m.get(c.key).push(c.primaryKey);
-      c.continue();
-    };
-    cur.onerror = () => res();
-  })).catch(() => {});
+  return evOpen().then(db => Promise.all([
+    new Promise(res => {
+      const m = new Map();
+      const cur = db.transaction('img').objectStore('img').index('token').openKeyCursor();
+      cur.onsuccess = e => {
+        const c = e.target.result;
+        if (!c) { evIndex = m; return res(); }
+        if (!m.has(c.key)) m.set(c.key, []);
+        m.get(c.key).push(c.primaryKey);
+        c.continue();
+      };
+      cur.onerror = () => res();
+    }),
+    new Promise(res => {
+      const k = new Map();
+      const cur = db.transaction('img').objectStore('img').index('kind').openKeyCursor();
+      cur.onsuccess = e => {
+        const c = e.target.result;
+        if (!c) { evKinds = k; return res(); }
+        k.set(c.primaryKey, c.key);
+        c.continue();
+      };
+      cur.onerror = () => res();
+    })
+  ])).catch(() => {});
 }
-function evIdsFor(r) {
+// kind 생략 시 전부, 'buy'/'sell'이면 그 종류만 (종류 정보가 없는 옛 사진은 매입으로 취급)
+function evIdsFor(r, kind) {
   const ids = new Set();
   evTokens(r.reason).forEach(t => (evIndex.get(t) || []).forEach(id => ids.add(id)));
-  return [...ids];
+  const list = [...ids];
+  return kind ? list.filter(id => (evKinds.get(id) || 'buy') === kind) : list;
 }
 // 판매 사유를 본문/번호 두 줄로 나눠 표에 깔끔하게 표시 (원문은 마우스를 올리면 보임)
 function reasonHtml(rsn) {
@@ -773,15 +806,16 @@ function buySrc(r) {
   if (s.includes('웍스아웃')) return '웍스아웃';
   return r.buyDate ? '기타' : '-';
 }
-function evBtnHtml(r, i) {
-  const n = evIdsFor(r).length;
-  return '<button class="ev-btn' + (n ? ' has' : '') + '" data-i="' + i + '" title="증빙 사진">' +
-    (n ? '📎' + n : '＋') + '</button>';
+function evBtnHtml(r, i, kind) {
+  const n = evIdsFor(r, kind).length;
+  return '<button class="ev-btn' + (n ? ' has' : '') + '" data-i="' + i + '" data-kind="' + kind + '"' +
+    ' title="' + EV_KIND_LABEL[kind] + ' 증빙 사진">' + (n ? '📎' + n : '＋') + '</button>';
 }
-function evPut(file, tokens) {
+function evPut(file, tokens, kind) {
   return evOpen().then(db => new Promise((res, rej) => {
     const tx = db.transaction('img', 'readwrite');
-    tx.objectStore('img').add({ tokens, name: file.name, type: file.type, blob: file, ts: Date.now() });
+    tx.objectStore('img').add({ tokens, name: file.name, type: file.type, blob: file,
+      ts: Date.now(), kind: kind || evKindOfName(file.name) });
     tx.oncomplete = () => res();
     tx.onerror = () => rej(tx.error);
   }));
@@ -817,14 +851,14 @@ function evNames() {
 // --- 뷰어 모달 ---
 let evUrls = [];
 function evRevoke() { evUrls.forEach(u => URL.revokeObjectURL(u)); evUrls = []; }
-async function evRenderList(r) {
+async function evRenderList(r, kind) {
   evRevoke();
   const box = document.getElementById('evList');
   box.innerHTML = '';
-  const ids = evIdsFor(r);
+  const ids = evIdsFor(r, kind);
   if (!ids.length) {
     box.innerHTML = '<p style="grid-column:1/-1;font-size:.85rem;color:var(--muted);margin:6px 0;">' +
-      '아직 첨부된 사진이 없습니다. 오른쪽 위 "+ 사진 추가"를 누르세요.</p>';
+      '아직 첨부된 ' + (EV_KIND_LABEL[kind] || '증빙') + ' 사진이 없습니다. 오른쪽 위 "+ 사진 추가"를 누르세요.</p>';
     return;
   }
   for (const id of ids) {
@@ -848,21 +882,24 @@ async function evRenderList(r) {
     del.textContent = '삭제';
     del.addEventListener('click', async () => {
       if (!confirm('이 사진을 삭제할까요?')) return;
-      await evDel(id); await evRebuildIndex(); await evRenderList(r); render();
+      await evDel(id); await evRebuildIndex(); await evRenderList(r, kind); render();
     });
     cap.appendChild(nm); cap.appendChild(del);
     fig.appendChild(img); fig.appendChild(cap);
     box.appendChild(fig);
   }
 }
-function evOpenModal(i) {
+function evOpenModal(i, kind) {
   const r = rows[i];
   if (!r) return;
+  const k = kind === 'sell' ? 'sell' : 'buy';
   const m = document.getElementById('evModal');
   m.dataset.i = i;
-  document.getElementById('evTitle').textContent = (r.item || '(품목 없음)') + ' — 증빙 사진';
+  m.dataset.kind = k;
+  document.getElementById('evTitle').textContent =
+    (r.item || '(품목 없음)') + ' — ' + EV_KIND_LABEL[k] + ' 증빙 사진';
   m.style.display = 'flex';
-  evRenderList(r);
+  evRenderList(r, k);
 }
 function evCloseModal() {
   evRevoke();
@@ -882,6 +919,7 @@ document.getElementById('evAddFile').addEventListener('change', async e => {
   e.target.value = '';
   if (!files.length) return;
   const i = Number(document.getElementById('evModal').dataset.i);
+  const kind = document.getElementById('evModal').dataset.kind === 'sell' ? 'sell' : 'buy';
   const r = rows[i];
   if (!r) return;
   let toks = evTokens(r.reason);
@@ -894,13 +932,13 @@ document.getElementById('evAddFile').addEventListener('change', async e => {
     save();
   }
   try {
-    for (const f of files) await evPut(f, toks);
+    for (const f of files) await evPut(f, toks, kind);
   } catch (err) {
     alert('사진 저장에 실패했습니다: ' + err);
   }
   await evRebuildIndex();
   render();
-  await evRenderList(r);
+  await evRenderList(r, kind);
 });
 
 // 일괄 연결 — 파일명에서 번호를 뽑아 저장 (같은 파일명은 건너뜀)
@@ -913,19 +951,22 @@ document.getElementById('evBulk').addEventListener('change', async e => {
   const known = await evNames().catch(() => new Set());
   const rowTok = new Set();
   rows.forEach(r => evTokens(r.reason).forEach(t => rowTok.add(t)));
-  let added = 0, dup = 0, noTok = 0, matched = 0;
+  let added = 0, dup = 0, noTok = 0, matched = 0, buyN = 0, sellN = 0;
   for (const f of files) {
     const toks = evTokens(f.name);
     if (!toks.length) { noTok++; continue; }
     if (known.has(f.name)) { dup++; continue; }
-    try { await evPut(f, toks); } catch (err) { st.textContent = '저장 실패: ' + err; return; }
+    const kind = evKindOfName(f.name);
+    try { await evPut(f, toks, kind); } catch (err) { st.textContent = '저장 실패: ' + err; return; }
     known.add(f.name);
     added++;
+    if (kind === 'sell') sellN++; else buyN++;
     if (toks.some(t => rowTok.has(t))) matched++;
   }
   await evRebuildIndex();
   render();
-  st.textContent = '저장 ' + added + '장 (대장 행과 연결됨 ' + matched + '장' +
+  st.textContent = '저장 ' + added + '장 (매입 ' + buyN + ' / 판매 ' + sellN +
+    ', 대장 행과 연결됨 ' + matched + '장' +
     (dup ? ', 이미 있어 건너뜀 ' + dup : '') +
     (noTok ? ', 파일명에 번호 없음 ' + noTok : '') + ')';
 });
@@ -1088,14 +1129,15 @@ function render() {
       '<td class="num">' + fmt(r.sellPrice) + '</td>' +
       '<td class="num">' + (profit === null ? '-' : fmt(profit)) + '</td>' +
       '<td>' + holdLabel(days) + '</td>' +
+      '<td style="text-align:center;">' + evBtnHtml(r, i, 'buy') + '</td>' +
+      '<td style="text-align:center;">' + evBtnHtml(r, i, 'sell') + '</td>' +
       '<td class="wrap-wide">' + reasonHtml(r.reason) + '</td>' +
-      '<td style="text-align:center;">' + evBtnHtml(r, i) + '</td>' +
       '<td><button class="edit" data-i="' + i + '">수정</button><button class="del" data-i="' + i + '">삭제</button></td>';
     tbody.appendChild(tr);
   });
 
   tbody.querySelectorAll('.ev-btn').forEach(b => b.addEventListener('click', () => {
-    evOpenModal(Number(b.dataset.i));
+    evOpenModal(Number(b.dataset.i), b.dataset.kind);
   }));
 
   tbody.querySelectorAll('.del').forEach(b => b.addEventListener('click', () => {
@@ -1576,12 +1618,16 @@ document.getElementById('csvBtn').addEventListener('click', () => {
     if (/^[=+@\t\r]/.test(s) || (/^-/.test(s) && !/^-?\d+(\.\d+)?$/.test(s))) s = "'" + s;
     return '"' + s.replace(/"/g, '""') + '"';
   };
-  const header = ['구분','판매일','플랫폼','품목','판매가','구매일','구매가','손익','보유기간','판매사유'];
+  // 화면의 대장 표와 같은 순서 (구매 → 판매 → 수익)
+  const header = ['구분','품목','구입처','구매일','구매가','판매일','판매처','판매가','수익','보유기간',
+                  '매입사진','판매사진','판매사유'];
   const lines = [header.map(esc).join(',')];
   exportRows.forEach(r => {
     const profit = (r.buyPrice !== null && r.buyPrice !== '') ? r.sellPrice - r.buyPrice : '';
-    lines.push([rowType(r), r.sellDate, r.platform, r.item, r.sellPrice, r.buyDate, r.buyPrice ?? '', profit,
-      holdLabel(holdDays(r.buyDate, r.sellDate)), r.reason].map(esc).join(','));
+    lines.push([rowType(r), r.item, buySrc(r), r.buyDate, r.buyPrice ?? '', r.sellDate, r.platform, r.sellPrice,
+      profit, holdLabel(holdDays(r.buyDate, r.sellDate)),
+      evIdsFor(r, 'buy').length || '', evIdsFor(r, 'sell').length || '',
+      r.reason].map(esc).join(','));
   });
   // BOM 포함: 엑셀에서 한글이 깨지지 않도록
   const blob = new Blob(['\uFEFF' + '' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
@@ -1960,7 +2006,7 @@ document.getElementById('restoreFile').addEventListener('change', async e => {
       rows.push({
         type: get('구분') === '리셀' ? '리셀' : '중고거래',
         sellDate: impNormDate(get('판매일')) || get('판매일'),
-        platform: get('플랫폼') || '기타',
+        platform: get('플랫폼') || get('판매처') || '기타',
         item: get('품목'),
         sellPrice: sellPrice === null ? 0 : sellPrice,
         buyDate: impNormDate(get('구매일')) || '',
