@@ -353,8 +353,8 @@
       </label>
       <label style="font-size:.88rem;">한 페이지에:
         <select id="pageSizeSel" style="padding:6px;border:1px solid var(--line);border-radius:6px;font-family:inherit;font-size:.9rem;">
-          <option value="25">25건</option>
-          <option value="50" selected>50건</option>
+          <option value="30" selected>30건</option>
+          <option value="50">50건</option>
           <option value="100">100건</option>
           <option value="all">전체</option>
         </select>
@@ -1069,7 +1069,7 @@ function isFlagged(r) {
 
 // 표 보기 상태: 연도 필터·정렬·페이지 (데이터 자체는 바꾸지 않고 보여주는 방식만 바꾼다)
 let viewYear = 'all', sortKey = null, sortDir = 1;
-let pageSize = 50, pageNo = 1;
+let pageSize = 30, pageNo = 1;
 
 function sortVal(r, key) {
   switch (key) {
