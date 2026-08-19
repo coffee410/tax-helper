@@ -102,7 +102,8 @@
   tbody tr:hover td { background: var(--bg-soft); }
   th[data-sort] { cursor: pointer; user-select: none; }
   th[data-sort]:hover { color: var(--accent); }
-  td.num { text-align: right; }
+  td.num, th.num { text-align: right; }
+  td.ctr, th.ctr { text-align: center; }
   tr.flag td { background: #fff7ec; }
   .stats { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
   .stat { background: var(--bg-soft); border: 1px solid var(--line); border-radius: 12px; padding: 12px 18px; min-width: 140px; flex: 1 1 auto; }
@@ -368,13 +369,13 @@
           <th data-sort="item" data-label="품목">품목</th>
           <th>구입처</th>
           <th data-sort="buyDate" data-label="구매일">구매일</th>
-          <th data-sort="buyPrice" data-label="구매가">구매가</th>
+          <th class="num" data-sort="buyPrice" data-label="구매가">구매가</th>
           <th data-sort="sellDate" data-label="판매일">판매일</th>
           <th data-sort="platform" data-label="판매처">판매처</th>
-          <th data-sort="sellPrice" data-label="판매가">판매가</th>
-          <th data-sort="profit" data-label="수익">수익</th>
+          <th class="num" data-sort="sellPrice" data-label="판매가">판매가</th>
+          <th class="num" data-sort="profit" data-label="수익">수익</th>
           <th data-sort="hold" data-label="보유기간">보유기간</th>
-          <th>매입 사진</th><th>판매 사진</th>
+          <th class="ctr">매입 사진</th><th class="ctr">판매 사진</th>
           <th data-sort="reason" data-label="판매 사유">판매 사유</th><th></th>
         </tr></thead>
         <tbody></tbody>
@@ -1197,8 +1198,8 @@ function render() {
       '<td class="num">' + fmt(r.sellPrice) + '</td>' +
       '<td class="num">' + (profit === null ? '-' : fmt(profit)) + '</td>' +
       '<td>' + holdLabel(days) + '</td>' +
-      '<td style="text-align:center;">' + evBtnHtml(r, i, 'buy') + '</td>' +
-      '<td style="text-align:center;">' + evBtnHtml(r, i, 'sell') + '</td>' +
+      '<td class="ctr">' + evBtnHtml(r, i, 'buy') + '</td>' +
+      '<td class="ctr">' + evBtnHtml(r, i, 'sell') + '</td>' +
       '<td class="wrap-wide">' + reasonHtml(r.reason) + '</td>' +
       '<td><button class="edit" data-i="' + i + '">수정</button><button class="del" data-i="' + i + '">삭제</button></td>';
     tbody.appendChild(tr);
@@ -1285,7 +1286,8 @@ function renderSummary() {
   if (mode === 'platform') keys.sort((a, b) => groups.get(b).sell - groups.get(a).sell);
   else keys.sort().reverse(); // 최신 연도·월이 위로
   let html = '<table><thead><tr><th>' + (mode === 'year' ? '연도' : mode === 'month' ? '월' : '판매처') + '</th>' +
-    '<th>건수</th><th>중고</th><th>리셀</th><th>총 판매액</th><th>손익 (구매가 입력분)</th></tr></thead><tbody>';
+    '<th class="num">건수</th><th class="num">중고</th><th class="num">리셀</th>' +
+    '<th class="num">총 판매액</th><th class="num">손익 (구매가 입력분)</th></tr></thead><tbody>';
   keys.forEach(k => {
     const g = groups.get(k);
     html += '<tr><td>' + escHtml(k) + '</td><td class="num">' + g.cnt + '</td><td class="num">' + g.used + '</td>' +
@@ -1924,7 +1926,7 @@ document.getElementById('cardFile').addEventListener('change', async e => {
       return;
     }
     status.textContent = entries.length + '건 인식 — [입력]을 누르면 위 폼의 구매일·구매가가 채워집니다.';
-    let html = '<table><thead><tr><th>이용일</th><th>가맹점</th><th>금액</th><th></th></tr></thead><tbody>';
+    let html = '<table><thead><tr><th>이용일</th><th>가맹점</th><th class="num">금액</th><th></th></tr></thead><tbody>';
     entries.forEach((en, i) => {
       html += '<tr><td>' + en.date + '</td><td>' + escHtml(en.merchant) + '</td>' +
         '<td class="num">' + fmt(en.amount) + '</td>' +
@@ -2185,8 +2187,8 @@ document.getElementById('calcForm').addEventListener('submit', e => {
 
   let html = '<p style="font-size:.92rem;">부가세 본세 약 <b>' + fmt(Math.round(base)) + '원</b>, 미등록가산세 약 <b>' +
     fmt(unreg) + '원</b> 기준' + (deduct ? '' : ' (등록 전 매입세액 불공제 가정 — 매출 전액 기준)') + '</p>' +
-    '<div class="table-scroll"><table><thead><tr><th>시나리오</th><th>무신고가산세<br><span class="law">(감면 반영)</span></th>' +
-    '<th>납부지연가산세</th><th>총 예상 부담</th></tr></thead><tbody>';
+    '<div class="table-scroll"><table><thead><tr><th>시나리오</th><th class="num">무신고가산세<br><span class="law">(감면 반영)</span></th>' +
+    '<th class="num">납부지연가산세</th><th class="num">총 예상 부담</th></tr></thead><tbody>';
   scenarios.forEach((s, i) => {
     html += '<tr' + (i === 0 ? ' style="background:#f0fdf4;font-weight:700;"' : '') + '><td>' + s.label +
       (s.red ? ' <span class="law">(' + (s.red * 100) + '% 감면)</span>' : '') + '</td>' +
